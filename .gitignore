@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.android
+*.appworks
+*.cache
+*.cursor
+*.DS_Store
