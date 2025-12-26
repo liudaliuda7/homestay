@@ -1,204 +1,213 @@
 <template>
   <div class="property-detail">
-    <!-- 房源图片轮播 -->
-    <div class="image-carousel">
-      <div class="main-image">
-        <img :src="currentImage" :alt="property.title" class="image" />
-      </div>
-      <div class="thumbnail-container">
-        <div 
-          v-for="(image, index) in property.images" 
-          :key="index"
-          class="thumbnail"
-          :class="{ active: index === currentImageIndex }"
-          @click="currentImageIndex = index"
-        >
-          <img :src="image" :alt="`${property.title} ${index + 1}`" />
-        </div>
-      </div>
+    <!-- 加载中状态 -->
+    <div v-if="!property" class="loading">
+      <div class="spinner"></div>
+      <p>加载中...</p>
     </div>
     
-    <!-- 房源基本信息 -->
-    <div class="container">
-      <div class="main-content">
-        <div class="info-section">
-          <div class="header">
-            <h1 class="title">{{ property.title }}</h1>
-            <div class="rating">
-              <span class="star">⭐</span>
-              <span>{{ property.rating }}</span>
-              <span>({{ property.reviews }}条评价)</span>
-            </div>
-          </div>
-          
-          <div class="location">📍 {{ property.location }}</div>
-          
-          <div class="divider"></div>
-          
-          <div class="property-info">
-            <div class="info-item">
-              <span class="info-icon">👥</span>
-              <span>{{ property.guests }}位房客</span>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">🛏️</span>
-              <span>{{ property.bedroom }}间卧室</span>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">🛁</span>
-              <span>{{ property.bathroom }}间卫生间</span>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">🛏️</span>
-              <span>{{ property.beds }}张床</span>
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- 房东信息 -->
-          <div class="host-info">
-            <div class="host-avatar">
-              <img :src="property.host.avatar" :alt="property.host.name" />
-            </div>
-            <div class="host-details">
-              <div class="host-label">房东</div>
-              <div class="host-name">{{ property.host.name }}</div>
-              <div class="host-verified" v-if="property.host.verified">
-                ✅ 已验证 | 加入于 {{ property.host.joined }}
-              </div>
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- 房源描述 -->
-          <div class="description">
-            <h2>房源描述</h2>
-            <p>{{ property.description }}</p>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- 设施配备 -->
-          <div class="amenities">
-            <h2>设施配备</h2>
-            <div class="amenities-grid">
-              <div v-for="(amenity, index) in property.amenities" :key="index" class="amenity-item">
-                <span class="amenity-icon">✅</span>
-                <span>{{ amenity }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- 入住规则 -->
-          <div class="rules">
-            <h2>入住规则</h2>
-            <ul>
-              <li v-for="(rule, index) in property.rules" :key="index">
-                <span class="rule-icon">📌</span>
-                <span>{{ rule }}</span>
-              </li>
-            </ul>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- 入住时间 -->
-          <div class="checkin-checkout">
-            <h2>入住与退房</h2>
-            <div class="time-info">
-              <div class="time-item">
-                <span class="time-label">入住时间：</span>
-                <span class="time-value">{{ property.checkIn }}</span>
-              </div>
-              <div class="time-item">
-                <span class="time-label">退房时间：</span>
-                <span class="time-value">{{ property.checkOut }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- 用户评价 -->
-          <div class="reviews">
-            <h2>用户评价 ({{ property.reviews }})</h2>
-            <div class="review-list">
-              <div v-for="review in propertyReviews" :key="review.id" class="review-item">
-                <div class="review-header">
-                  <div class="review-user">
-                    <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" />
-                    <span class="user-name">{{ review.user.name }}</span>
-                  </div>
-                  <div class="review-rating">
-                    <span class="star">⭐</span>
-                    <span>{{ review.rating }}</span>
-                  </div>
-                </div>
-                <div class="review-date">{{ review.date }}</div>
-                <div class="review-content">{{ review.content }}</div>
-              </div>
-            </div>
+    <!-- 房源内容 -->
+    <div v-else>
+      <!-- 房源图片轮播 -->
+      <div class="image-carousel">
+        <div class="main-image">
+          <img :src="currentImage" :alt="property.title" class="image" />
+        </div>
+        <div class="thumbnail-container">
+          <div 
+            v-for="(image, index) in property.images" 
+            :key="index"
+            class="thumbnail"
+            :class="{ active: index === currentImageIndex }"
+            @click="currentImageIndex = index"
+          >
+            <img :src="image" :alt="`${property.title} ${index + 1}`" />
           </div>
         </div>
-        
-        <!-- 侧边栏 - 预订信息 -->
-        <div class="sidebar">
-          <div class="booking-card">
-            <div class="price-section">
-              <span class="price">¥{{ pricePerNight }}</span>
-              <span class="price-unit">/晚</span>
-            </div>
-            <div class="rating-section">
-              <span class="star">⭐</span>
-              <span>{{ property.rating }}</span>
-              <span>({{ property.reviews }}条评价)</span>
-            </div>
-            <div class="date-picker">
-              <div class="date-input">
-                <label>入住日期</label>
-                <input 
-                  type="date" 
-                  class="date-field" 
-                  v-model="checkInDate"
-                  :min="minDate"
-                  @change="handleCheckInChange"
-                />
-              </div>
-              <div class="date-input">
-                <label>退房日期</label>
-                <input 
-                  type="date" 
-                  class="date-field" 
-                  v-model="checkOutDate"
-                  :min="checkInDate ? new Date(new Date(checkInDate).getTime() + 86400000).toISOString().split('T')[0] : minDate"
-                  @change="handleCheckOutChange"
-                />
+      </div>
+      
+      <!-- 房源基本信息 -->
+      <div class="container">
+        <div class="main-content">
+          <div class="info-section">
+            <div class="header">
+              <h1 class="title">{{ property.title }}</h1>
+              <div class="rating">
+                <span class="star">⭐</span>
+                <span>{{ property.rating }}</span>
+                <span>({{ property.reviews }}条评价)</span>
               </div>
             </div>
-            <div class="guests-input">
-              <label>房客数量</label>
-              <input 
-                type="number" 
-                min="1" 
-                :max="property.guests" 
-                class="guest-field" 
-                v-model="guests"
-                @change="handleGuestsChange"
-              />
+            
+            <div class="location">📍 {{ property.location }}</div>
+            
+            <div class="divider"></div>
+            
+            <div class="property-info">
+              <div class="info-item">
+                <span class="info-icon">👥</span>
+                <span>{{ property.guests }}位房客</span>
+              </div>
+              <div class="info-item">
+                <span class="info-icon">🛏️</span>
+                <span>{{ property.bedroom }}间卧室</span>
+              </div>
+              <div class="info-item">
+                <span class="info-icon">🛁</span>
+                <span>{{ property.bathroom }}间卫生间</span>
+              </div>
+              <div class="info-item">
+                <span class="info-icon">🛏️</span>
+                <span>{{ property.beds }}张床</span>
+              </div>
             </div>
-            <div class="total-price">
-              <span class="total-label">总价</span>
-              <span class="total-amount">¥{{ totalPrice }}</span>
-              <span class="total-nights" v-if="stayDays > 0">({{ stayDays }}晚)</span>
+            
+            <div class="divider"></div>
+            
+            <!-- 房东信息 -->
+            <div class="host-info">
+              <div class="host-avatar">
+                <img :src="property.host.avatar" :alt="property.host.name" />
+              </div>
+              <div class="host-details">
+                <div class="host-label">房东</div>
+                <div class="host-name">{{ property.host.name }}</div>
+                <div class="host-verified" v-if="property.host.verified">
+                  ✅ 已验证 | 加入于 {{ property.host.joined }}
+                </div>
+              </div>
             </div>
-            <button class="book-btn" @click="handleBook">立即预订</button>
-            <div class="cancellation">
-              <span class="cancellation-icon">✅</span>
-              <span>可免费取消</span>
+            
+            <div class="divider"></div>
+            
+            <!-- 房源描述 -->
+            <div class="description">
+              <h2>房源描述</h2>
+              <p>{{ property.description }}</p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- 设施配备 -->
+            <div class="amenities">
+              <h2>设施配备</h2>
+              <div class="amenities-grid">
+                <div v-for="(amenity, index) in property.amenities" :key="index" class="amenity-item">
+                  <span class="amenity-icon">✅</span>
+                  <span>{{ amenity }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- 入住规则 -->
+            <div class="rules">
+              <h2>入住规则</h2>
+              <ul>
+                <li v-for="(rule, index) in property.rules" :key="index">
+                  <span class="rule-icon">📌</span>
+                  <span>{{ rule }}</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- 入住时间 -->
+            <div class="checkin-checkout">
+              <h2>入住与退房</h2>
+              <div class="time-info">
+                <div class="time-item">
+                  <span class="time-label">入住时间：</span>
+                  <span class="time-value">{{ property.checkIn }}</span>
+                </div>
+                <div class="time-item">
+                  <span class="time-label">退房时间：</span>
+                  <span class="time-value">{{ property.checkOut }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- 用户评价 -->
+            <div class="reviews">
+              <h2>用户评价 ({{ property.reviews }})</h2>
+              <div class="review-list">
+                <div v-for="review in propertyReviews" :key="review.id" class="review-item">
+                  <div class="review-header">
+                    <div class="review-user">
+                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" />
+                      <span class="user-name">{{ review.user.name }}</span>
+                    </div>
+                    <div class="review-rating">
+                      <span class="star">⭐</span>
+                      <span>{{ review.rating }}</span>
+                    </div>
+                  </div>
+                  <div class="review-date">{{ review.date }}</div>
+                  <div class="review-content">{{ review.content }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 侧边栏 - 预订信息 -->
+          <div class="sidebar">
+            <div class="booking-card">
+              <div class="price-section">
+                <span class="price">¥{{ pricePerNight }}</span>
+                <span class="price-unit">/晚</span>
+              </div>
+              <div class="rating-section">
+                <span class="star">⭐</span>
+                <span>{{ property.rating }}</span>
+                <span>({{ property.reviews }}条评价)</span>
+              </div>
+              <div class="date-picker">
+                <div class="date-input">
+                  <label>入住日期</label>
+                  <input 
+                    type="date" 
+                    class="date-field" 
+                    v-model="checkInDate"
+                    :min="minDate"
+                    @change="handleCheckInChange"
+                  />
+                </div>
+                <div class="date-input">
+                  <label>退房日期</label>
+                  <input 
+                    type="date" 
+                    class="date-field" 
+                    v-model="checkOutDate"
+                    :min="checkInDate ? new Date(new Date(checkInDate).getTime() + 86400000).toISOString().split('T')[0] : minDate"
+                    @change="handleCheckOutChange"
+                  />
+                </div>
+              </div>
+              <div class="guests-input">
+                <label>房客数量</label>
+                <input 
+                  type="number" 
+                  min="1" 
+                  :max="property.guests" 
+                  class="guest-field" 
+                  v-model="guests"
+                  @change="handleGuestsChange"
+                />
+              </div>
+              <div class="total-price">
+                <span class="total-label">总价</span>
+                <span class="total-amount">¥{{ totalPrice }}</span>
+                <span class="total-nights" v-if="stayDays > 0">({{ stayDays }}晚)</span>
+              </div>
+              <button class="book-btn" @click="handleBook">立即预订</button>
+              <div class="cancellation">
+                <span class="cancellation-icon">✅</span>
+                <span>可免费取消</span>
+              </div>
             </div>
           </div>
         </div>
@@ -207,99 +216,132 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
 
-export default {
-  name: 'PropertyDetail',
-  data() {
-    return {
-      property: null,
-      currentImageIndex: 0,
-      propertyReviews: [],
-      // 日期选择相关数据
-      checkInDate: '',
-      checkOutDate: '',
-      guests: 1,
-      minDate: new Date().toISOString().split('T')[0] // 最小可选日期为今天
-    };
-  },
-  computed: {
-    currentImage() {
-      return this.property ? this.property.images[this.currentImageIndex] : '';
-    },
-    // 计算入住天数
-    stayDays() {
-      if (!this.checkInDate || !this.checkOutDate) return 0;
-      
-      const checkIn = new Date(this.checkInDate);
-      const checkOut = new Date(this.checkOutDate);
-      
-      // 确保退房日期晚于入住日期
-      if (checkOut <= checkIn) return 0;
-      
-      const diffTime = Math.abs(checkOut - checkIn);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      return diffDays;
-    },
-    // 计算总价
-    totalPrice() {
-      if (!this.property || !this.stayDays) return 0;
-      
-      return this.property.price * this.stayDays;
-    },
-    // 计算每晚价格
-    pricePerNight() {
-      return this.property ? this.property.price : 0;
-    }
-  },
-  created() {
-    this.loadProperty();
-    this.loadReviews();
-  },
-  methods: {
-    loadProperty() {
-      const id = parseInt(this.$route.params.id);
-      this.property = getPropertyById(id);
-    },
-    loadReviews() {
-      const id = parseInt(this.$route.params.id);
-      this.propertyReviews = getReviewsByPropertyId(id);
-    },
-    // 处理入住日期变化
-    handleCheckInChange(e) {
-      this.checkInDate = e.target.value;
-      
-      // 如果退房日期早于或等于新的入住日期，则清空退房日期
-      if (this.checkOutDate && new Date(this.checkOutDate) <= new Date(this.checkInDate)) {
-        this.checkOutDate = '';
-      }
-    },
-    // 处理退房日期变化
-    handleCheckOutChange(e) {
-      this.checkOutDate = e.target.value;
-    },
-    // 处理房客数量变化
-    handleGuestsChange(e) {
-      this.guests = parseInt(e.target.value);
-    },
-    // 处理预订按钮点击
-    handleBook() {
-      if (!this.checkInDate || !this.checkOutDate || this.stayDays === 0) {
-        alert('请选择有效的入住和退房日期');
-        return;
-      }
-      
-      alert(`预订成功！\n入住日期：${this.checkInDate}\n退房日期：${this.checkOutDate}\n入住天数：${this.stayDays}晚\n房客数量：${this.guests}人\n总价：¥${this.totalPrice}`);
-    }
+const route = useRoute()
+
+// 响应式状态
+const property = ref(null)
+const currentImageIndex = ref(0)
+const propertyReviews = ref([])
+const checkInDate = ref('')
+const checkOutDate = ref('')
+const guests = ref(1)
+const minDate = new Date().toISOString().split('T')[0]
+
+// 计算当前显示的图片
+const currentImage = computed(() => {
+  return property.value ? property.value.images[currentImageIndex.value] : '';
+})
+
+// 计算入住天数
+const stayDays = computed(() => {
+  if (!checkInDate.value || !checkOutDate.value) return 0;
+  
+  const checkIn = new Date(checkInDate.value);
+  const checkOut = new Date(checkOutDate.value);
+  
+  // 确保退房日期晚于入住日期
+  if (checkOut <= checkIn) return 0;
+  
+  const diffTime = Math.abs(checkOut - checkIn);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
+})
+
+// 计算总价
+const totalPrice = computed(() => {
+  if (!property.value || !stayDays.value) return 0;
+  
+  return property.value.price * stayDays.value;
+})
+
+// 计算每晚价格
+const pricePerNight = computed(() => {
+  return property.value ? property.value.price : 0;
+})
+
+// 加载房源信息
+const loadProperty = () => {
+  const id = parseInt(route.params.id);
+  property.value = getPropertyById(id);
+}
+
+// 加载评论
+const loadReviews = () => {
+  const id = parseInt(route.params.id);
+  propertyReviews.value = getReviewsByPropertyId(id);
+}
+
+// 处理入住日期变化
+const handleCheckInChange = (e) => {
+  checkInDate.value = e.target.value;
+  
+  // 如果退房日期早于或等于新的入住日期，则清空退房日期
+  if (checkOutDate.value && new Date(checkOutDate.value) <= new Date(checkInDate.value)) {
+    checkOutDate.value = '';
   }
-};
+}
+
+// 处理退房日期变化
+const handleCheckOutChange = (e) => {
+  checkOutDate.value = e.target.value;
+}
+
+// 处理房客数量变化
+const handleGuestsChange = (e) => {
+  guests.value = parseInt(e.target.value);
+}
+
+// 处理预订按钮点击
+const handleBook = () => {
+  if (!checkInDate.value || !checkOutDate.value || stayDays.value === 0) {
+    alert('请选择有效的入住和退房日期');
+    return;
+  }
+  
+  alert(`预订成功！\n入住日期：${checkInDate.value}\n退房日期：${checkOutDate.value}\n入住天数：${stayDays.value}晚\n房客数量：${guests.value}人\n总价：¥${totalPrice.value}`);
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadProperty();
+  loadReviews();
+})
 </script>
 
 <style scoped>
 .property-detail {
   background-color: #f9f9f9;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  gap: 1rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff5a5f;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .image-carousel {

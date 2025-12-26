@@ -4,15 +4,8 @@
   </div>
 </template>
 
-<script>
-import PropertyDetail from '../components/PropertyDetail.vue';
-
-export default {
-  name: 'PropertyPage',
-  components: {
-    PropertyDetail
-  }
-};
+<script setup>
+import PropertyDetail from '../components/PropertyDetail.vue'
 </script>
 
 <style scoped>

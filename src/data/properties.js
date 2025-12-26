@@ -150,7 +150,6 @@ export const properties = [
     reviews: 112,
     location: '杭州市西湖区',
     images: [
-      image16,
       image17,
       image18,
       image19,

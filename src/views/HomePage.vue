@@ -34,61 +34,57 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import PropertyCard from '../components/PropertyCard.vue';
 import { properties, searchProperties } from '../data/properties';
 
-export default {
-  name: 'HomePage',
-  components: {
-    PropertyCard
-  },
-  data() {
-    return {
-      allProperties: properties,
-      filteredProperties: properties,
-      searchKeyword: '',
-      sortBy: 'recommended'
-    };
-  },
-  watch: {
-    // 监听路由参数变化，实现搜索功能
-    '$route.query.keyword': {
-      immediate: true,
-      handler(newKeyword) {
-        this.searchKeyword = newKeyword || '';
-        this.filterAndSortProperties();
-      }
-    }
-  },
-  methods: {
-    filterAndSortProperties() {
-      // 先搜索
-      this.filteredProperties = searchProperties(this.searchKeyword);
-      // 再排序
-      this.sortProperties();
-    },
-    sortProperties() {
-      switch (this.sortBy) {
-        case 'price-low':
-          this.filteredProperties.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          this.filteredProperties.sort((a, b) => b.price - a.price);
-          break;
-        case 'rating':
-          this.filteredProperties.sort((a, b) => b.rating - a.rating);
-          break;
-        default:
-          // 默认按推荐排序（这里使用原始顺序）
-          this.filteredProperties = searchProperties(this.searchKeyword);
-      }
-    },
-    handleSort() {
-      this.sortProperties();
-    }
+const route = useRoute()
+
+// 响应式状态
+const allProperties = ref(properties)
+const filteredProperties = ref(properties)
+const searchKeyword = ref('')
+const sortBy = ref('recommended')
+
+// 筛选和排序房源
+const filterAndSortProperties = () => {
+  // 先搜索
+  filteredProperties.value = searchProperties(searchKeyword.value)
+  // 再排序
+  sortProperties()
+}
+
+// 排序房源
+const sortProperties = () => {
+  switch (sortBy.value) {
+    case 'price-low':
+      filteredProperties.value.sort((a, b) => a.price - b.price);
+      break;
+    case 'price-high':
+      filteredProperties.value.sort((a, b) => b.price - a.price);
+      break;
+    case 'rating':
+      filteredProperties.value.sort((a, b) => b.rating - a.rating);
+      break;
+    default:
+      // 默认按推荐排序（这里使用原始顺序）
+      filteredProperties.value = searchProperties(searchKeyword.value);
   }
-};
+}
+
+const handleSort = () => {
+  sortProperties()
+}
+
+// 监听路由参数变化，实现搜索功能
+watch(() => route.query.keyword, (newKeyword) => {
+  searchKeyword.value = newKeyword || '';
+  filterAndSortProperties();
+}, {
+  immediate: true
+})
 </script>
 
 <style scoped>

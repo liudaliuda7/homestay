@@ -26,16 +26,13 @@
   </router-link>
 </template>
 
-<script>
-export default {
-  name: 'PropertyCard',
-  props: {
-    property: {
-      type: Object,
-      required: true
-    }
+<script setup>
+defineProps({
+  property: {
+    type: Object,
+    required: true
   }
-};
+})
 </script>
 
 <style scoped>

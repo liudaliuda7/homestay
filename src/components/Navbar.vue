@@ -51,25 +51,25 @@
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'Navbar',
-  data() {
-    return {
-      searchKeyword: '',
-      mobileMenuOpen: false
-    };
-  },
-  methods: {
-    handleSearch() {
-      // 搜索逻辑，这里可以通过路由参数或事件传递搜索关键词
-      this.$router.push({ path: '/', query: { keyword: this.searchKeyword } });
-    },
-    toggleMobileMenu() {
-      this.mobileMenuOpen = !this.mobileMenuOpen;
-    }
-  }
-};
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+// 响应式状态
+const searchKeyword = ref('')
+const mobileMenuOpen = ref(false)
+
+// 搜索处理函数
+const handleSearch = () => {
+  router.push({ path: '/', query: { keyword: searchKeyword.value } })
+}
+
+// 切换移动端菜单
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
 </script>
 
 <style scoped>
