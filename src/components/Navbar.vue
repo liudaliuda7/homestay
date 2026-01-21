@@ -8,9 +8,10 @@
       
       <!-- 搜索框 -->
       <div class="search-container">
+        <CityCascader />
         <input 
           type="text" 
-          placeholder="搜索城市、区域或房源名称..." 
+          placeholder="搜索区域或房源名称..." 
           v-model="searchKeyword"
           @input="handleSearch"
           class="search-input"
@@ -54,6 +55,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import CityCascader from './CityCascader.vue'
 
 const router = useRouter()
 
@@ -117,6 +119,7 @@ const toggleMobileMenu = () => {
   flex: 1;
   padding: 0.75rem 1rem;
   border: none;
+  border-left: 1px solid #e0e0e0;
   outline: none;
   font-size: 0.9rem;
 }
