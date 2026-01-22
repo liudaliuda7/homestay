@@ -66,8 +66,10 @@ const selectedDistrictCode = ref('')
 const selectedCity = ref('北京')
 
 // 切换下拉菜单
-const toggleDropdown = () => {
+const toggleDropdown = (event) => {
+  event.stopPropagation() // 阻止事件冒泡
   dropdownOpen.value = !dropdownOpen.value
+  console.log('Dropdown toggled:', dropdownOpen.value) // 调试日志
 }
 
 // 点击外部关闭
@@ -191,7 +193,7 @@ onUnmounted(() => {
 .city-cascader {
   position: relative;
   display: inline-block;
-  z-index: 1000;
+  z-index: 999999;
   overflow: visible;
 }
 
@@ -251,15 +253,16 @@ onUnmounted(() => {
 
 .city-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: 100%;
   left: 0;
-  z-index: 99999;
+  z-index: 9999999;
   background-color: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   min-width: 600px;
   overflow: visible;
+  margin-top: 8px;
 }
 
 .cascader-container {

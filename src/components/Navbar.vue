@@ -111,7 +111,7 @@ const toggleMobileMenu = () => {
   margin: 0 2rem;
   border: 1px solid #e0e0e0;
   border-radius: 24px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
