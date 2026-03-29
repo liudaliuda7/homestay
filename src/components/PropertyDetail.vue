@@ -1,9 +1,23 @@
 <template>
   <div class="property-detail">
     <!-- 加载中状态 -->
-    <div v-if="!property" class="loading">
-      <div class="spinner"></div>
-      <p>加载中...</p>
+    <div v-if="loading" class="loading">
+      <div class="skeleton-loader">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-text"></div>
+          <div class="skeleton-text"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="error-state">
+      <div class="error-icon">❌</div>
+      <h3>房源不存在</h3>
+      <p>抱歉，您访问的房源不存在或已被移除</p>
+      <router-link to="/" class="back-btn">返回首页</router-link>
     </div>
     
     <!-- 房源内容 -->
@@ -11,7 +25,7 @@
       <!-- 房源图片轮播 -->
       <div class="image-carousel">
         <div class="main-image">
-          <img :src="currentImage" :alt="property.title" class="image" />
+          <img :src="currentImage" :alt="property.title" class="image" @error="handleImageError" />
         </div>
         <div class="thumbnail-container">
           <div 
@@ -21,7 +35,7 @@
             :class="{ active: index === currentImageIndex }"
             @click="currentImageIndex = index"
           >
-            <img :src="image" :alt="`${property.title} ${index + 1}`" />
+            <img :src="image" :alt="`${property.title} ${index + 1}`" @error="handleImageError" />
           </div>
         </div>
       </div>
@@ -67,7 +81,7 @@
             <!-- 房东信息 -->
             <div class="host-info">
               <div class="host-avatar">
-                <img :src="property.host.avatar" :alt="property.host.name" />
+                <img :src="property.host.avatar" :alt="property.host.name" @error="handleImageError" />
               </div>
               <div class="host-details">
                 <div class="host-label">房东</div>
@@ -138,7 +152,7 @@
                 <div v-for="review in propertyReviews" :key="review.id" class="review-item">
                   <div class="review-header">
                     <div class="review-user">
-                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" />
+                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" @error="handleImageError" />
                       <span class="user-name">{{ review.user.name }}</span>
                     </div>
                     <div class="review-rating">
@@ -220,6 +234,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
+import defaultImage from '@/assets/image01.png';
 
 const route = useRoute()
 
@@ -231,11 +246,20 @@ const checkInDate = ref('')
 const checkOutDate = ref('')
 const guests = ref(1)
 const minDate = new Date().toISOString().split('T')[0]
+const loading = ref(true)
+const error = ref(false)
 
 // 计算当前显示的图片
 const currentImage = computed(() => {
-  return property.value ? property.value.images[currentImageIndex.value] : '';
+  if (!property.value) return '';
+  const image = property.value.images[currentImageIndex.value] || '';
+  return image;
 })
+
+// 处理图片加载错误
+const handleImageError = (e) => {
+  e.target.src = defaultImage;
+}
 
 // 计算入住天数
 const stayDays = computed(() => {
@@ -269,6 +293,10 @@ const pricePerNight = computed(() => {
 const loadProperty = () => {
   const id = parseInt(route.params.id);
   property.value = getPropertyById(id);
+  if (!property.value) {
+    error.value = true;
+  }
+  loading.value = false;
 }
 
 // 加载评论
@@ -294,7 +322,15 @@ const handleCheckOutChange = (e) => {
 
 // 处理房客数量变化
 const handleGuestsChange = (e) => {
-  guests.value = parseInt(e.target.value);
+  const value = parseInt(e.target.value);
+  const maxGuests = property.value ? property.value.guests : 1;
+  if (isNaN(value) || value < 1) {
+    guests.value = 1;
+  } else if (value > maxGuests) {
+    guests.value = maxGuests;
+  } else {
+    guests.value = value;
+  }
 }
 
 // 处理预订按钮点击
@@ -330,6 +366,51 @@ onMounted(() => {
   color: #666;
 }
 
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-state h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.error-state p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background-color: #ff5a5f;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  margin-top: 1rem;
+}
+
+.back-btn:hover {
+  background-color: #ff474c;
+}
+
 .spinner {
   width: 50px;
   height: 50px;
@@ -342,6 +423,61 @@ onMounted(() => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* 骨架屏样式 */
+.skeleton-loader {
+  width: 100%;
+  max-width: 1200px;
+  padding: 2rem 1rem;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 500px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.skeleton-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.skeleton-title {
+  height: 32px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  width: 60%;
+}
+
+.skeleton-text {
+  height: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-text:last-child {
+  width: 80%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .image-carousel {

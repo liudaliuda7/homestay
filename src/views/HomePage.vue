@@ -2,40 +2,63 @@
   <div class="home-page">
     <!-- 搜索结果统计 -->
     <div class="container">
-      <div class="search-result">
-        <h2>{{ filteredProperties.length }}套房源</h2>
-        <div class="sort-options">
-          <span>排序：</span>
-          <select v-model="sortBy" @change="handleSort" class="sort-select">
-            <option value="recommended">推荐</option>
-            <option value="price-low">价格从低到高</option>
-            <option value="price-high">价格从高到低</option>
-            <option value="rating">评分最高</option>
-          </select>
+      <!-- 加载中状态 -->
+      <div v-if="loading" class="loading-container">
+        <div class="search-result">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-sort"></div>
+        </div>
+        
+        <div class="properties-grid">
+          <div v-for="i in 6" :key="i" class="property-card-skeleton">
+            <div class="skeleton-image"></div>
+            <div class="skeleton-content">
+              <div class="skeleton-text"></div>
+              <div class="skeleton-title-small"></div>
+              <div class="skeleton-text"></div>
+              <div class="skeleton-text"></div>
+            </div>
+          </div>
         </div>
       </div>
       
-      <!-- 房源列表 -->
-      <div class="properties-grid">
-        <PropertyCard 
-          v-for="property in filteredProperties" 
-          :key="property.id" 
-          :property="property" 
-        />
-      </div>
-      
-      <!-- 空状态 -->
-      <div v-if="filteredProperties.length === 0" class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <h3>未找到匹配的房源</h3>
-        <p>请尝试其他搜索关键词或调整筛选条件</p>
+      <!-- 正常内容 -->
+      <div v-else>
+        <div class="search-result">
+          <h2>{{ filteredProperties.length }}套房源</h2>
+          <div class="sort-options">
+            <span>排序：</span>
+            <select v-model="sortBy" @change="handleSort" class="sort-select">
+              <option value="recommended">推荐</option>
+              <option value="price-low">价格从低到高</option>
+              <option value="price-high">价格从高到低</option>
+              <option value="rating">评分最高</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- 房源列表 -->
+        <div class="properties-grid">
+          <PropertyCard 
+            v-for="property in filteredProperties" 
+            :key="property.id" 
+            :property="property" 
+          />
+        </div>
+        
+        <!-- 空状态 -->
+        <div v-if="filteredProperties.length === 0" class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>未找到匹配的房源</h3>
+          <p>请尝试其他搜索关键词或调整筛选条件</p>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import PropertyCard from '../components/PropertyCard.vue';
 import { properties, searchProperties } from '../data/properties';
@@ -47,13 +70,20 @@ const allProperties = ref(properties)
 const filteredProperties = ref(properties)
 const searchKeyword = ref('')
 const sortBy = ref('recommended')
+const loading = ref(true)
 
 // 筛选和排序房源
 const filterAndSortProperties = () => {
-  // 先搜索
-  filteredProperties.value = searchProperties(searchKeyword.value)
-  // 再排序
-  sortProperties()
+  loading.value = true;
+  
+  // 模拟加载延迟，实际项目中可以移除
+  setTimeout(() => {
+    // 先搜索
+    filteredProperties.value = searchProperties(searchKeyword.value)
+    // 再排序
+    sortProperties()
+    loading.value = false;
+  }, 500);
 }
 
 // 排序房源
@@ -84,6 +114,14 @@ watch(() => route.query.keyword, (newKeyword) => {
   filterAndSortProperties();
 }, {
   immediate: true
+})
+
+// 组件挂载时模拟加载
+onMounted(() => {
+  // 模拟加载延迟，实际项目中可以根据需要调整
+  setTimeout(() => {
+    loading.value = false;
+  }, 800);
 })
 </script>
 
@@ -158,6 +196,76 @@ watch(() => route.query.keyword, (newKeyword) => {
   font-size: 1rem;
   color: #666;
   margin: 0;
+}
+
+/* 骨架屏样式 */
+.loading-container {
+  min-height: 400px;
+}
+
+.property-card-skeleton {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-image {
+  width: 100%;
+  padding-top: 60%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-content {
+  padding: 1rem;
+}
+
+.skeleton-text {
+  height: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-title-small {
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-title {
+  width: 150px;
+  height: 32px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-sort {
+  width: 150px;
+  height: 32px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* 响应式设计 */
