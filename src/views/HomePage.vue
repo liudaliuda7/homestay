@@ -3,10 +3,10 @@
     <!-- 搜索结果统计 -->
     <div class="container">
       <div class="search-result">
-        <h2>{{ filteredProperties.length }}套房源</h2>
+        <h2>{{ loading ? '加载中...' : filteredProperties.length + '套房源' }}</h2>
         <div class="sort-options">
           <span>排序：</span>
-          <select v-model="sortBy" @change="handleSort" class="sort-select">
+          <select v-model="sortBy" @change="handleSort" class="sort-select" :disabled="loading">
             <option value="recommended">推荐</option>
             <option value="price-low">价格从低到高</option>
             <option value="price-high">价格从高到低</option>
@@ -15,38 +15,47 @@
         </div>
       </div>
       
-      <!-- 房源列表 -->
-      <div class="properties-grid">
-        <PropertyCard 
-          v-for="property in filteredProperties" 
-          :key="property.id" 
-          :property="property" 
-        />
+      <!-- 骨架屏加载状态 -->
+      <div v-if="loading" class="skeleton-grid">
+        <Skeleton v-for="i in 6" :key="i" />
       </div>
       
-      <!-- 空状态 -->
-      <div v-if="filteredProperties.length === 0" class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <h3>未找到匹配的房源</h3>
-        <p>请尝试其他搜索关键词或调整筛选条件</p>
-      </div>
+      <!-- 房源列表 -->
+      <template v-else>
+        <div class="properties-grid">
+          <PropertyCard 
+            v-for="property in filteredProperties" 
+            :key="property.id" 
+            :property="property" 
+          />
+        </div>
+        
+        <!-- 空状态 -->
+        <div v-if="filteredProperties.length === 0" class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>未找到匹配的房源</h3>
+          <p>请尝试其他搜索关键词或调整筛选条件</p>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import PropertyCard from '../components/PropertyCard.vue';
+import Skeleton from '../components/Skeleton.vue';
 import { properties, searchProperties } from '../data/properties';
 
 const route = useRoute()
 
 // 响应式状态
 const allProperties = ref(properties)
-const filteredProperties = ref(properties)
+const filteredProperties = ref([])
 const searchKeyword = ref('')
 const sortBy = ref('recommended')
+const loading = ref(true)
 
 // 筛选和排序房源
 const filterAndSortProperties = () => {
@@ -82,6 +91,10 @@ const handleSort = () => {
 watch(() => route.query.keyword, (newKeyword) => {
   searchKeyword.value = newKeyword || '';
   filterAndSortProperties();
+  // 模拟加载延迟，展示骨架屏效果
+  setTimeout(() => {
+    loading.value = false;
+  }, 1000);
 }, {
   immediate: true
 })
@@ -134,6 +147,12 @@ watch(() => route.query.keyword, (newKeyword) => {
   gap: 2rem;
 }
 
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -172,14 +191,14 @@ watch(() => route.query.keyword, (newKeyword) => {
     align-items: flex-start;
   }
   
-  .properties-grid {
+  .properties-grid, .skeleton-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .properties-grid {
+  .properties-grid, .skeleton-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }

@@ -8,14 +8,20 @@
       
       <!-- 搜索框 -->
       <div class="search-container">
+        <!-- 城市选择器 -->
+        <CityCascade 
+          v-model="selectedLocation"
+          @change="handleLocationChange"
+          class="city-cascade"
+        />
         <input 
           type="text" 
-          placeholder="搜索城市、区域或房源名称..." 
+          placeholder="搜索区域或房源名称..." 
           v-model="searchKeyword"
           @input="handleSearch"
           class="search-input"
         />
-        <button class="search-btn">
+        <button class="search-btn" @click="handleSearch">
           <span class="search-icon">🔍</span>
         </button>
       </div>
@@ -54,21 +60,40 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import CityCascade from './CityCascade.vue'
 
 const router = useRouter()
 
 // 响应式状态
 const searchKeyword = ref('')
 const mobileMenuOpen = ref(false)
+const selectedLocation = ref({
+  province: { code: '110000', name: '北京市' },
+  city: { code: '110100', name: '北京市' },
+  district: { code: '110105', name: '朝阳区' }
+})
 
 // 搜索处理函数
 const handleSearch = () => {
-  router.push({ path: '/', query: { keyword: searchKeyword.value } })
+  const query = { keyword: searchKeyword.value }
+  if (selectedLocation.value.city) {
+    query.city = selectedLocation.value.city.name
+  }
+  router.push({ path: '/', query })
 }
 
 // 切换移动端菜单
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+// 城市选择变化处理
+const handleLocationChange = (location) => {
+  selectedLocation.value = location
+  // 可以在这里触发搜索或更新搜索结果
+  if (searchKeyword.value) {
+    handleSearch()
+  }
 }
 </script>
 
@@ -79,7 +104,7 @@ const toggleMobileMenu = () => {
   padding: 0.5rem 0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .container {
@@ -109,8 +134,56 @@ const toggleMobileMenu = () => {
   margin: 0 2rem;
   border: 1px solid #e0e0e0;
   border-radius: 24px;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  position: relative;
+}
+
+.city-cascade {
+  flex-shrink: 0;
+  min-width: 120px;
+  max-width: 180px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.city-cascade :deep(.city-selector) {
+  border: none;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  font-size: 0.9rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.city-cascade :deep(.city-selector:hover) {
+  background-color: #f8f8f8;
+}
+
+.city-cascade :deep(.city-selector[title]:hover::after) {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 8px;
+  animation: navbarTooltipFadeIn 0.3s ease-in-out 0.5s forwards;
+}
+
+@keyframes navbarTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.city-cascade :deep(.dropdown-panel) {
+  margin-top: 8px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .search-input {
@@ -119,6 +192,7 @@ const toggleMobileMenu = () => {
   border: none;
   outline: none;
   font-size: 0.9rem;
+  background-color: transparent;
 }
 
 .search-btn {
@@ -261,6 +335,21 @@ const toggleMobileMenu = () => {
     order: 3;
     width: 100%;
     margin: 1rem 0 0 0;
+  }
+  
+  .city-cascade {
+    min-width: 100px;
+    max-width: 140px;
+  }
+  
+  .city-cascade :deep(.city-selector) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .city-cascade :deep(.dropdown-panel) {
+    min-width: 280px;
+    max-width: 320px;
   }
 }
 
