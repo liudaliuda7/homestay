@@ -1,7 +1,7 @@
 <template>
   <router-link :to="`/property/${property.id}`" class="property-card card-hover">
     <div class="card-image">
-      <img :src="property.images[0]" :alt="property.title" class="image" />
+      <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
       <div class="rating">
         <span class="star">⭐</span>
         <span>{{ property.rating }}</span>
@@ -33,6 +33,12 @@ defineProps({
     required: true
   }
 })
+
+const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZSIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY2NiI+5aSn5by65LiK54mIPC90ZXh0Pjwvc3ZnPg=='
+
+const handleImageError = (e) => {
+  e.target.src = defaultImage;
+}
 </script>
 
 <style scoped>

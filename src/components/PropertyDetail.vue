@@ -1,9 +1,17 @@
 <template>
   <div class="property-detail">
     <!-- 加载中状态 -->
-    <div v-if="!property" class="loading">
-      <div class="spinner"></div>
-      <p>加载中...</p>
+    <div v-if="loading" class="loading-container">
+      <Skeleton class="property-skeleton" />
+    </div>
+    
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="error-page">
+      <div class="error-content">
+        <h1 class="error-title">404</h1>
+        <p class="error-message">抱歉，您访问的房源不存在或已被删除</p>
+        <button class="back-btn" @click="$router.back()">返回上一页</button>
+      </div>
     </div>
     
     <!-- 房源内容 -->
@@ -11,7 +19,7 @@
       <!-- 房源图片轮播 -->
       <div class="image-carousel">
         <div class="main-image">
-          <img :src="currentImage" :alt="property.title" class="image" />
+          <img :src="currentImage" :alt="property.title" class="image" @error="handleImageError" />
         </div>
         <div class="thumbnail-container">
           <div 
@@ -21,7 +29,7 @@
             :class="{ active: index === currentImageIndex }"
             @click="currentImageIndex = index"
           >
-            <img :src="image" :alt="`${property.title} ${index + 1}`" />
+            <img :src="image" :alt="`${property.title} ${index + 1}`" @error="handleImageError" />
           </div>
         </div>
       </div>
@@ -67,8 +75,8 @@
             <!-- 房东信息 -->
             <div class="host-info">
               <div class="host-avatar">
-                <img :src="property.host.avatar" :alt="property.host.name" />
-              </div>
+            <img :src="property.host.avatar" :alt="property.host.name" @error="handleAvatarError" />
+          </div>
               <div class="host-details">
                 <div class="host-label">房东</div>
                 <div class="host-name">{{ property.host.name }}</div>
@@ -138,7 +146,7 @@
                 <div v-for="review in propertyReviews" :key="review.id" class="review-item">
                   <div class="review-header">
                     <div class="review-user">
-                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" />
+                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" @error="handleAvatarError" />
                       <span class="user-name">{{ review.user.name }}</span>
                     </div>
                     <div class="review-rating">
@@ -219,6 +227,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import Skeleton from '../components/Skeleton.vue'
 import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
 
 const route = useRoute()
@@ -231,6 +240,20 @@ const checkInDate = ref('')
 const checkOutDate = ref('')
 const guests = ref(1)
 const minDate = new Date().toISOString().split('T')[0]
+const loading = ref(true)
+const error = ref(false)
+const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZSIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzY2NiI+5aSn5by65LiK54mIPC90ZXh0Pjwvc3ZnPg=='
+const avatarDefaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZSIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzk5OSI+5LqMPC90ZXh0Pjwvc3ZnPg=='
+
+// 图片错误处理
+const handleImageError = (e) => {
+  e.target.src = defaultImage;
+}
+
+// 头像图片错误处理
+const handleAvatarError = (e) => {
+  e.target.src = avatarDefaultImage;
+}
 
 // 计算当前显示的图片
 const currentImage = computed(() => {
@@ -268,7 +291,23 @@ const pricePerNight = computed(() => {
 // 加载房源信息
 const loadProperty = () => {
   const id = parseInt(route.params.id);
-  property.value = getPropertyById(id);
+  
+  // 验证ID是否为有效数字
+  if (isNaN(id) || id < 1) {
+    error.value = true;
+    loading.value = false;
+    return;
+  }
+  
+  const foundProperty = getPropertyById(id);
+  
+  if (!foundProperty) {
+    error.value = true;
+  } else {
+    property.value = foundProperty;
+  }
+  
+  loading.value = false;
 }
 
 // 加载评论
@@ -294,13 +333,33 @@ const handleCheckOutChange = (e) => {
 
 // 处理房客数量变化
 const handleGuestsChange = (e) => {
-  guests.value = parseInt(e.target.value);
+  let value = parseInt(e.target.value);
+  
+  // 验证是否为正整数
+  if (isNaN(value) || value < 1) {
+    value = 1;
+  }
+  
+  // 不能超过房源最大房客数
+  if (property.value && value > property.value.guests) {
+    value = property.value.guests;
+  }
+  
+  guests.value = value;
+  // 更新输入框的值
+  e.target.value = value;
 }
 
 // 处理预订按钮点击
 const handleBook = () => {
   if (!checkInDate.value || !checkOutDate.value || stayDays.value === 0) {
     alert('请选择有效的入住和退房日期');
+    return;
+  }
+  
+  // 验证房客数量
+  if (guests.value < 1 || (property.value && guests.value > property.value.guests)) {
+    alert(`请选择有效的房客数量（1 - ${property.value.guests}人）`);
     return;
   }
   
@@ -319,15 +378,63 @@ onMounted(() => {
   background-color: #f9f9f9;
 }
 
-.loading {
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 500px;
+  background-color: #f9f9f9;
+}
+
+.property-skeleton {
+  max-width: 800px;
+  width: 100%;
+}
+
+.error-page {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 500px;
-  gap: 1rem;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+
+.error-content {
+  background-color: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.error-title {
+  font-size: 6rem;
+  font-weight: 700;
+  color: #ff5a5f;
+  margin: 0 0 1rem 0;
+}
+
+.error-message {
   font-size: 1.2rem;
   color: #666;
+  margin-bottom: 2rem;
+}
+
+.back-btn {
+  padding: 0.75rem 2rem;
+  background-color: #ff5a5f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+  background-color: #ff474c;
 }
 
 .spinner {
