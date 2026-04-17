@@ -23,7 +23,7 @@
                 @click="selectProvince(province)"
               >
                 <span class="item-text">{{ province.name }}</span>
-                <span v-if="selectedProvinceCode === province.code" class="item-arrow">›</span>
+                <span v-if="mockCities[province.code]?.length > 0" class="item-arrow">›</span>
               </div>
             </TransitionGroup>
           </div>
@@ -39,7 +39,7 @@
                 @click="selectCity(city)"
               >
                 <span class="item-text">{{ city.name }}</span>
-                <span v-if="selectedCityCode === city.code" class="item-arrow">›</span>
+                <span v-if="mockDistricts[city.code]?.length > 0" class="item-arrow">›</span>
               </div>
             </TransitionGroup>
           </div>
@@ -329,8 +329,14 @@ const selectProvince = (province) => {
   selectedDistrictCode.value = ''
   selectedDistrictName.value = ''
   
-  cities.value = mockCities[province.code] || []
-  districts.value = []
+  const hasCities = mockCities[province.code]?.length > 0
+  
+  if (hasCities) {
+    cities.value = mockCities[province.code] || []
+    districts.value = []
+  } else {
+    dropdownOpen.value = false
+  }
 }
 
 const selectCity = (city) => {
@@ -339,7 +345,13 @@ const selectCity = (city) => {
   selectedDistrictCode.value = ''
   selectedDistrictName.value = ''
   
-  districts.value = mockDistricts[city.code] || []
+  const hasDistricts = mockDistricts[city.code]?.length > 0
+  
+  if (hasDistricts) {
+    districts.value = mockDistricts[city.code] || []
+  } else {
+    dropdownOpen.value = false
+  }
 }
 
 const selectDistrict = (district) => {
