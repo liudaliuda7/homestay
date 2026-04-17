@@ -319,6 +319,20 @@ const toggleDropdown = (event) => {
     event.stopPropagation()
   }
   dropdownOpen.value = !dropdownOpen.value
+  
+  if (dropdownOpen.value) {
+    initializeCascader()
+  }
+}
+
+const initializeCascader = () => {
+  if (selectedProvinceCode.value) {
+    cities.value = mockCities[selectedProvinceCode.value] || []
+  }
+  
+  if (selectedCityCode.value) {
+    districts.value = mockDistricts[selectedCityCode.value] || []
+  }
 }
 
 const selectProvince = (province) => {
