@@ -1,7 +1,7 @@
 <template>
   <router-link :to="`/property/${property.id}`" class="property-card card-hover">
     <div class="card-image">
-      <img :src="property.images[0]" :alt="property.title" class="image" />
+      <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
       <div class="rating">
         <span class="star">⭐</span>
         <span>{{ property.rating }}</span>
@@ -27,12 +27,18 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   property: {
     type: Object,
     required: true
   }
 })
+
+const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/800/600'
+
+const handleImageError = (event) => {
+  event.target.src = DEFAULT_PROPERTY_IMAGE
+}
 </script>
 
 <style scoped>

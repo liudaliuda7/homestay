@@ -1,17 +1,25 @@
 <template>
   <div class="property-detail">
     <!-- 加载中状态 -->
-    <div v-if="!property" class="loading">
+    <div v-if="loading" class="loading">
       <div class="spinner"></div>
       <p>加载中...</p>
     </div>
     
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="error-state">
+      <div class="error-icon">😕</div>
+      <h3>{{ error.title }}</h3>
+      <p>{{ error.message }}</p>
+      <router-link to="/" class="back-home-btn">返回首页</router-link>
+    </div>
+    
     <!-- 房源内容 -->
-    <div v-else>
+    <div v-else-if="property">
       <!-- 房源图片轮播 -->
       <div class="image-carousel">
         <div class="main-image">
-          <img :src="currentImage" :alt="property.title" class="image" />
+          <img :src="currentImage" :alt="property.title" class="image" @error="handleImageError($event, 'main')" />
         </div>
         <div class="thumbnail-container">
           <div 
@@ -21,7 +29,7 @@
             :class="{ active: index === currentImageIndex }"
             @click="currentImageIndex = index"
           >
-            <img :src="image" :alt="`${property.title} ${index + 1}`" />
+            <img :src="image" :alt="`${property.title} ${index + 1}`" @error="handleImageError($event, 'thumbnail', index)" />
           </div>
         </div>
       </div>
@@ -67,7 +75,7 @@
             <!-- 房东信息 -->
             <div class="host-info">
               <div class="host-avatar">
-                <img :src="property.host.avatar" :alt="property.host.name" />
+                <img :src="property.host.avatar" :alt="property.host.name" @error="handleImageError($event, 'avatar')" />
               </div>
               <div class="host-details">
                 <div class="host-label">房东</div>
@@ -134,11 +142,11 @@
             <!-- 用户评价 -->
             <div class="reviews">
               <h2>用户评价 ({{ property.reviews }})</h2>
-              <div class="review-list">
+              <div v-if="propertyReviews.length > 0" class="review-list">
                 <div v-for="review in propertyReviews" :key="review.id" class="review-item">
                   <div class="review-header">
                     <div class="review-user">
-                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" />
+                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" @error="handleImageError($event, 'avatar')" />
                       <span class="user-name">{{ review.user.name }}</span>
                     </div>
                     <div class="review-rating">
@@ -149,6 +157,11 @@
                   <div class="review-date">{{ review.date }}</div>
                   <div class="review-content">{{ review.content }}</div>
                 </div>
+              </div>
+              <div v-else class="reviews-empty">
+                <div class="empty-icon">💬</div>
+                <h4>暂无评价</h4>
+                <p>该房源暂时还没有用户评价，快来成为第一个评价的人吧！</p>
               </div>
             </div>
           </div>
@@ -194,7 +207,8 @@
                   min="1" 
                   :max="property.guests" 
                   class="guest-field" 
-                  v-model="guests"
+                  :value="guests"
+                  @input="handleGuestsInput"
                   @change="handleGuestsChange"
                 />
               </div>
@@ -223,8 +237,14 @@ import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
 
 const route = useRoute()
 
+// 默认图片URL
+const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/800/600'
+const DEFAULT_AVATAR_IMAGE = 'https://picsum.photos/seed/default-avatar/100/100'
+
 // 响应式状态
 const property = ref(null)
+const loading = ref(true)
+const error = ref(null)
 const currentImageIndex = ref(0)
 const propertyReviews = ref([])
 const checkInDate = ref('')
@@ -267,14 +287,80 @@ const pricePerNight = computed(() => {
 
 // 加载房源信息
 const loadProperty = () => {
-  const id = parseInt(route.params.id);
-  property.value = getPropertyById(id);
+  loading.value = true;
+  error.value = null;
+  
+  const idParam = route.params.id;
+  
+  if (!idParam) {
+    error.value = {
+      title: '房源不存在',
+      message: '您访问的房源页面不存在，请检查URL是否正确。'
+    };
+    loading.value = false;
+    return;
+  }
+  
+  const id = parseInt(idParam);
+  
+  if (isNaN(id) || id <= 0 || !Number.isInteger(id)) {
+    error.value = {
+      title: '无效的房源ID',
+      message: '您访问的房源ID格式不正确，请检查URL是否正确。'
+    };
+    loading.value = false;
+    return;
+  }
+  
+  const data = getPropertyById(id);
+  
+  if (!data) {
+    error.value = {
+      title: '房源不存在',
+      message: `房源ID ${id} 不存在或已被下架，请返回首页浏览其他房源。`
+    };
+    loading.value = false;
+    return;
+  }
+  
+  property.value = data;
+  loading.value = false;
 }
 
 // 加载评论
 const loadReviews = () => {
   const id = parseInt(route.params.id);
-  propertyReviews.value = getReviewsByPropertyId(id);
+  if (!isNaN(id) && id > 0) {
+    propertyReviews.value = getReviewsByPropertyId(id);
+  }
+}
+
+// 处理图片加载错误
+const handleImageError = (event, type, index) => {
+  if (type === 'avatar') {
+    event.target.src = DEFAULT_AVATAR_IMAGE;
+  } else {
+    event.target.src = DEFAULT_PROPERTY_IMAGE;
+  }
+}
+
+// 验证房客数量是否为正整数
+const validateGuests = (value) => {
+  const num = Number(value);
+  
+  if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+    return 1;
+  }
+  
+  const maxGuests = property.value ? property.value.guests : 1;
+  return Math.min(num, maxGuests);
+}
+
+// 处理房客数量输入
+const handleGuestsInput = (e) => {
+  const value = e.target.value;
+  const cleanValue = value.replace(/[^0-9]/g, '');
+  e.target.value = cleanValue;
 }
 
 // 处理入住日期变化
@@ -294,7 +380,8 @@ const handleCheckOutChange = (e) => {
 
 // 处理房客数量变化
 const handleGuestsChange = (e) => {
-  guests.value = parseInt(e.target.value);
+  guests.value = validateGuests(e.target.value);
+  e.target.value = guests.value;
 }
 
 // 处理预订按钮点击
@@ -342,6 +429,53 @@ onMounted(() => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-icon {
+  font-size: 4rem;
+}
+
+.error-state h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.error-state p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+  max-width: 400px;
+}
+
+.back-home-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 2rem;
+  background-color: #ff5a5f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.back-home-btn:hover {
+  background-color: #ff474c;
 }
 
 .image-carousel {
@@ -591,6 +725,33 @@ onMounted(() => {
 .review-item:last-child {
   border-bottom: none;
   padding-bottom: 0;
+}
+
+.reviews-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.reviews-empty .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.reviews-empty h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.reviews-empty p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
 }
 
 .review-header {
