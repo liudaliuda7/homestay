@@ -181,35 +181,40 @@
               <div class="date-picker">
                 <div class="date-input">
                   <label>入住日期</label>
-                  <input 
-                    type="date" 
-                    class="date-field" 
+                  <el-date-picker
                     v-model="checkInDate"
-                    :min="minDate"
+                    type="date"
+                    placeholder="选择入住日期"
+                    :disabled-date="disabledCheckInDate"
+                    format="YYYY-MM-DD"
+                    value-format="YYYY-MM-DD"
                     @change="handleCheckInChange"
+                    style="width: 100%;"
                   />
                 </div>
                 <div class="date-input">
                   <label>退房日期</label>
-                  <input 
-                    type="date" 
-                    class="date-field" 
+                  <el-date-picker
                     v-model="checkOutDate"
-                    :min="checkInDate ? new Date(new Date(checkInDate).getTime() + 86400000).toISOString().split('T')[0] : minDate"
+                    type="date"
+                    placeholder="选择退房日期"
+                    :disabled-date="disabledCheckOutDate"
+                    format="YYYY-MM-DD"
+                    value-format="YYYY-MM-DD"
                     @change="handleCheckOutChange"
+                    style="width: 100%;"
                   />
                 </div>
               </div>
               <div class="guests-input">
                 <label>房客数量</label>
-                <input 
-                  type="number" 
-                  min="1" 
-                  :max="property.guests" 
-                  class="guest-field" 
-                  :value="guests"
-                  @input="handleGuestsInput"
-                  @change="handleGuestsChange"
+                <el-input-number
+                  v-model="guests"
+                  :min="1"
+                  :max="maxGuests"
+                  :controls="true"
+                  size="default"
+                  style="width: 100%;"
                 />
               </div>
               <div class="total-price">
@@ -250,12 +255,35 @@ const propertyReviews = ref([])
 const checkInDate = ref('')
 const checkOutDate = ref('')
 const guests = ref(1)
-const minDate = new Date().toISOString().split('T')[0]
 
 // 计算当前显示的图片
 const currentImage = computed(() => {
   return property.value ? property.value.images[currentImageIndex.value] : '';
 })
+
+// 最大房客数量
+const maxGuests = computed(() => {
+  return property.value ? property.value.guests : 1;
+})
+
+// 禁用入住日期（禁用今天之前的日期）
+const disabledCheckInDate = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date.getTime() < today.getTime();
+}
+
+// 禁用退房日期（禁用入住日期之前的日期）
+const disabledCheckOutDate = (date) => {
+  if (!checkInDate.value) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date.getTime() < today.getTime();
+  }
+  const checkIn = new Date(checkInDate.value);
+  checkIn.setHours(0, 0, 0, 0);
+  return date.getTime() <= checkIn.getTime();
+}
 
 // 计算入住天数
 const stayDays = computed(() => {
@@ -344,28 +372,9 @@ const handleImageError = (event, type, index) => {
   }
 }
 
-// 验证房客数量是否为正整数
-const validateGuests = (value) => {
-  const num = Number(value);
-  
-  if (isNaN(num) || !Number.isInteger(num) || num < 1) {
-    return 1;
-  }
-  
-  const maxGuests = property.value ? property.value.guests : 1;
-  return Math.min(num, maxGuests);
-}
-
-// 处理房客数量输入
-const handleGuestsInput = (e) => {
-  const value = e.target.value;
-  const cleanValue = value.replace(/[^0-9]/g, '');
-  e.target.value = cleanValue;
-}
-
 // 处理入住日期变化
-const handleCheckInChange = (e) => {
-  checkInDate.value = e.target.value;
+const handleCheckInChange = (value) => {
+  checkInDate.value = value;
   
   // 如果退房日期早于或等于新的入住日期，则清空退房日期
   if (checkOutDate.value && new Date(checkOutDate.value) <= new Date(checkInDate.value)) {
@@ -374,14 +383,8 @@ const handleCheckInChange = (e) => {
 }
 
 // 处理退房日期变化
-const handleCheckOutChange = (e) => {
-  checkOutDate.value = e.target.value;
-}
-
-// 处理房客数量变化
-const handleGuestsChange = (e) => {
-  guests.value = validateGuests(e.target.value);
-  e.target.value = guests.value;
+const handleCheckOutChange = (value) => {
+  checkOutDate.value = value;
 }
 
 // 处理预订按钮点击

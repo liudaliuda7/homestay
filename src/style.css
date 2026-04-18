@@ -16,6 +16,19 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Element Plus 主题色彩覆盖 - 统一使用民宿之家主色调 #ff5a5f */
+  --el-color-primary: #ff5a5f;
+  --el-color-primary-light-1: #ff6a6f;
+  --el-color-primary-light-2: #ff7a7f;
+  --el-color-primary-light-3: #ff8a8f;
+  --el-color-primary-light-4: #ff9a9f;
+  --el-color-primary-light-5: #ffaaaf;
+  --el-color-primary-light-6: #ffbabf;
+  --el-color-primary-light-7: #ffcacf;
+  --el-color-primary-light-8: #ffdadf;
+  --el-color-primary-light-9: #ffeaef;
+  --el-color-primary-dark-2: #e54e53;
 }
 
 /* 全局链接样式 */
