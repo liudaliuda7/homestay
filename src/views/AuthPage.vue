@@ -24,7 +24,7 @@
           </div>
           <div class="decoration">
             <img 
-              src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cozy%20modern%20apartment%20interior%20with%20sunlight%20streaming%20through%20windows%20minimalist%20design&image_size=square" 
+              src="https://picsum.photos/seed/homestay-auth/600/400" 
               alt="民宿展示" 
               class="decoration-image"
             />
@@ -63,7 +63,7 @@
                   v-model="loginForm.username" 
                   placeholder="请输入用户名" 
                   size="large"
-                  prefix-icon="User"
+                  :prefix-icon="User"
                 />
               </el-form-item>
               
@@ -73,7 +73,7 @@
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="请输入密码" 
                   size="large"
-                  prefix-icon="Lock"
+                  :prefix-icon="Lock"
                   :show-password="true"
                   @keyup.enter="handleLogin"
                 />
@@ -123,7 +123,7 @@
                   v-model="registerForm.username" 
                   placeholder="请输入用户名（4-16位字母数字）" 
                   size="large"
-                  prefix-icon="User"
+                  :prefix-icon="User"
                 />
               </el-form-item>
               
@@ -133,7 +133,7 @@
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="请输入密码（6-20位）" 
                   size="large"
-                  prefix-icon="Lock"
+                  :prefix-icon="Lock"
                   :show-password="true"
                 />
               </el-form-item>
@@ -144,7 +144,7 @@
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="请再次输入密码" 
                   size="large"
-                  prefix-icon="Lock"
+                  :prefix-icon="Lock"
                   :show-password="true"
                 />
               </el-form-item>
@@ -155,17 +155,24 @@
                     v-model="registerForm.captcha" 
                     placeholder="请输入验证码" 
                     size="large"
-                    prefix-icon="Key"
-                    style="flex: 1;"
+                    :prefix-icon="Key"
+                    class="captcha-input"
                   />
-                  <div class="captcha-box" @click="refreshCaptcha">
-                    <span class="captcha-text">{{ currentCaptcha }}</span>
-                    <span class="refresh-tip">点击刷新</span>
+                  <div class="captcha-display" @click="refreshCaptcha">
+                    <span class="captcha-code">{{ currentCaptcha }}</span>
                   </div>
+                  <el-button 
+                    type="primary" 
+                    size="large"
+                    @click="refreshCaptcha"
+                    class="refresh-btn"
+                  >
+                    刷新
+                  </el-button>
                 </div>
               </el-form-item>
               
-              <el-form-item>
+              <el-form-item prop="agreed">
                 <el-checkbox v-model="registerForm.agreed">
                   我已阅读并同意 <span class="link-text">《用户协议》</span> 和 <span class="link-text">《隐私政策》</span>
                 </el-checkbox>
@@ -604,39 +611,42 @@ onMounted(() => {
 
 .captcha-row {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
 }
 
-.captcha-box {
-  min-width: 120px;
+.captcha-input {
+  flex: 1;
+}
+
+.captcha-display {
+  min-width: 110px;
   height: 40px;
   background: linear-gradient(135deg, #ff5a5f 0%, #ff7a7f 100%);
   border-radius: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.captcha-box:hover {
+.captcha-display:hover {
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(255, 90, 95, 0.3);
 }
 
-.captcha-text {
+.captcha-code {
   font-family: 'Courier New', monospace;
   font-size: 1.25rem;
   font-weight: 700;
   color: white;
   letter-spacing: 4px;
+  user-select: none;
 }
 
-.refresh-tip {
-  font-size: 0.6rem;
-  color: rgba(255,255,255,0.8);
+.refresh-btn {
+  white-space: nowrap;
 }
 
 .link-text {

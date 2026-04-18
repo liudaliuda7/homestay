@@ -106,13 +106,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import CityCascader from './CityCascader.vue'
 import { getCurrentUser, logoutUser } from '../data/user'
 
 const router = useRouter()
+const route = useRoute()
 
 const searchKeyword = ref('')
 const mobileMenuOpen = ref(false)
@@ -122,6 +123,13 @@ const currentUser = ref(null)
 const checkUserStatus = () => {
   currentUser.value = getCurrentUser()
 }
+
+watch(
+  () => route.path,
+  () => {
+    checkUserStatus()
+  }
+)
 
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
