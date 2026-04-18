@@ -276,6 +276,7 @@ onMounted(() => {
 
 .user-menu {
   position: relative;
+  padding-bottom: 0.5rem;
 }
 
 .user-avatar-btn {
@@ -311,7 +312,6 @@ onMounted(() => {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 0.5rem;
   min-width: 240px;
   background: white;
   border-radius: 12px;
