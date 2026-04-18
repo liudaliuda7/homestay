@@ -25,14 +25,19 @@
         <a href="#" class="nav-item">优惠</a>
         <a href="#" class="nav-item">帮助</a>
         
-        <div v-if="currentUser" class="user-menu">
-          <button class="user-avatar-btn" @click="toggleUserDropdown">
+        <div 
+          v-if="currentUser" 
+          class="user-menu"
+          @mouseenter="userDropdownOpen = true"
+          @mouseleave="userDropdownOpen = false"
+        >
+          <button class="user-avatar-btn">
             <img :src="currentUser.avatar" :alt="currentUser.username" class="user-avatar" />
             <span class="caret" :class="{ open: userDropdownOpen }">▼</span>
           </button>
           
           <Transition name="dropdown">
-            <div v-if="userDropdownOpen" class="user-dropdown" @click.stop>
+            <div v-if="userDropdownOpen" class="user-dropdown">
               <div class="dropdown-header">
                 <div class="dropdown-avatar">
                   <img :src="currentUser.avatar" :alt="currentUser.username" />
@@ -135,17 +140,6 @@ const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
 }
 
-const toggleUserDropdown = (e) => {
-  e.stopPropagation()
-  userDropdownOpen.value = !userDropdownOpen.value
-}
-
-const closeDropdown = (e) => {
-  if (userDropdownOpen.value && !e.target.closest('.user-menu')) {
-    userDropdownOpen.value = false
-  }
-}
-
 const handleSearch = () => {
   router.push({ path: '/', query: { keyword: searchKeyword.value } })
 }
@@ -161,11 +155,6 @@ const handleLogout = () => {
 
 onMounted(() => {
   checkUserStatus()
-  document.addEventListener('click', closeDropdown)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeDropdown)
 })
 </script>
 
@@ -298,11 +287,6 @@ onUnmounted(() => {
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 24px;
-  transition: background-color 0.3s;
-}
-
-.user-avatar-btn:hover {
-  background-color: #f5f5f5;
 }
 
 .user-avatar {
@@ -311,11 +295,6 @@ onUnmounted(() => {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid transparent;
-  transition: border-color 0.3s;
-}
-
-.user-avatar-btn:hover .user-avatar {
-  border-color: #ff5a5f;
 }
 
 .caret {
