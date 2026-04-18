@@ -37,81 +37,80 @@
           <button 
             class="tab-btn" 
             :class="{ active: activeTab === 'login' }"
-            @click="activeTab = 'login'"
+            @click="switchTab('login')"
           >
             登录
           </button>
           <button 
             class="tab-btn" 
             :class="{ active: activeTab === 'register' }"
-            @click="activeTab = 'register'"
+            @click="switchTab('register')"
           >
             注册
           </button>
         </div>
         
-        <Transition name="fade">
-          <div v-show="activeTab === 'login'" key="login" class="form-wrapper">
-            <div class="form-header">
-              <h2>欢迎回来</h2>
-              <p>登录您的民宿之家账户</p>
+        <div class="forms-wrapper">
+          <Transition :name="transitionDirection === 'right' ? 'slide-right' : 'slide-left'" mode="out-in">
+            <div v-if="activeTab === 'login'" key="login" class="form-wrapper">
+              <div class="form-header">
+                <h2>欢迎回来</h2>
+                <p>登录您的民宿之家账户</p>
+              </div>
+              
+              <el-form :model="loginForm" :rules="loginRules" ref="loginRef" label-position="top" class="auth-form">
+                <el-form-item label="用户名" prop="username">
+                  <el-input 
+                    v-model="loginForm.username" 
+                    placeholder="请输入用户名" 
+                    size="large"
+                    :prefix-icon="User"
+                  />
+                </el-form-item>
+                
+                <el-form-item label="密码" prop="password">
+                  <el-input 
+                    v-model="loginForm.password" 
+                    :type="showPassword ? 'text' : 'password'"
+                    placeholder="请输入密码" 
+                    size="large"
+                    :prefix-icon="Lock"
+                    :show-password="true"
+                    @keyup.enter="handleLogin"
+                  />
+                </el-form-item>
+                
+                <el-form-item>
+                  <div class="form-actions">
+                    <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
+                  </div>
+                </el-form-item>
+                
+                <el-form-item>
+                  <el-button 
+                    type="primary" 
+                    size="large" 
+                    :loading="loginLoading"
+                    @click="handleLogin"
+                    style="width: 100%;"
+                  >
+                    登录
+                  </el-button>
+                </el-form-item>
+              </el-form>
+              
+              <div class="form-tip">
+                <span>还没有账户？</span>
+                <button class="link-btn" @click="switchTab('register')">立即注册</button>
+              </div>
+              
+              <div class="demo-account">
+                <span class="demo-label">演示账户：</span>
+                <span class="demo-info">用户名 admin / 密码 123456</span>
+              </div>
             </div>
             
-            <el-form :model="loginForm" :rules="loginRules" ref="loginRef" label-position="top" class="auth-form">
-              <el-form-item label="用户名" prop="username">
-                <el-input 
-                  v-model="loginForm.username" 
-                  placeholder="请输入用户名" 
-                  size="large"
-                  :prefix-icon="User"
-                />
-              </el-form-item>
-              
-              <el-form-item label="密码" prop="password">
-                <el-input 
-                  v-model="loginForm.password" 
-                  :type="showPassword ? 'text' : 'password'"
-                  placeholder="请输入密码" 
-                  size="large"
-                  :prefix-icon="Lock"
-                  :show-password="true"
-                  @keyup.enter="handleLogin"
-                />
-              </el-form-item>
-              
-              <el-form-item>
-                <div class="form-actions">
-                  <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
-                </div>
-              </el-form-item>
-              
-              <el-form-item>
-                <el-button 
-                  type="primary" 
-                  size="large" 
-                  :loading="loginLoading"
-                  @click="handleLogin"
-                  style="width: 100%;"
-                >
-                  登录
-                </el-button>
-              </el-form-item>
-            </el-form>
-            
-            <div class="form-tip">
-              <span>还没有账户？</span>
-              <button class="link-btn" @click="activeTab = 'register'">立即注册</button>
-            </div>
-            
-            <div class="demo-account">
-              <span class="demo-label">演示账户：</span>
-              <span class="demo-info">用户名 admin / 密码 123456</span>
-            </div>
-          </div>
-        </Transition>
-        
-        <Transition name="fade">
-          <div v-show="activeTab === 'register'" key="register" class="form-wrapper">
+            <div v-else key="register" class="form-wrapper">
             <div class="form-header">
               <h2>创建账户</h2>
               <p>加入民宿之家，开启您的旅程</p>
@@ -193,10 +192,11 @@
             
             <div class="form-tip">
               <span>已有账户？</span>
-              <button class="link-btn" @click="activeTab = 'login'">立即登录</button>
+              <button class="link-btn" @click="switchTab('login')">立即登录</button>
             </div>
-          </div>
-        </Transition>
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
     
@@ -222,6 +222,13 @@ const showPassword = ref(false)
 const loginLoading = ref(false)
 const registerLoading = ref(false)
 const currentCaptcha = ref('')
+const transitionDirection = ref('right')
+
+const switchTab = (newTab) => {
+  if (newTab === activeTab.value) return
+  transitionDirection.value = newTab === 'register' ? 'right' : 'left'
+  activeTab.value = newTab
+}
 
 const loginRef = ref(null)
 const registerRef = ref(null)
@@ -665,15 +672,43 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+.forms-wrapper {
+  position: relative;
+  min-height: 520px;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.form-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active,
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.slide-right-enter-from {
   opacity: 0;
-  transform: translateX(20px);
+  transform: translateX(30px);
+}
+
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 
 @media (max-width: 1024px) {
