@@ -88,18 +88,16 @@
           </div>
         </div>
         
-        <button 
-          class="pay-btn" 
-          :class="{ loading: paying }"
-          @click="handlePay"
+        <el-button 
+          type="danger"
+          size="large"
+          :loading="paying"
           :disabled="paying"
+          @click="handlePay"
+          style="width: 100%; height: 52px; font-size: 1.1rem; font-weight: 600; border-radius: 12px;"
         >
-          <span v-if="paying" class="paying-text">
-            <span class="spinner-small"></span>
-            支付处理中...
-          </span>
-          <span v-else>确认支付 ¥{{ order.totalPrice }}</span>
-        </button>
+          {{ paying ? '支付中' : `确认支付 ¥${order?.totalPrice || 0}` }}
+        </el-button>
         
         <div class="pay-notice">
           <div class="notice-icon">🔒</div>
