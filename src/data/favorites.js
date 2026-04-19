@@ -1,12 +1,41 @@
 const STORAGE_KEY = 'homestay_favorites';
+const EXPIRE_DAYS = 3;
+
+const getExpireTime = () => {
+  const now = new Date();
+  return now.getTime() + EXPIRE_DAYS * 24 * 60 * 60 * 1000;
+};
+
+const getFavoritesData = () => {
+  const data = localStorage.getItem(STORAGE_KEY);
+  if (!data) return null;
+  
+  try {
+    const parsed = JSON.parse(data);
+    const now = new Date().getTime();
+    
+    if (parsed.expireTime && now > parsed.expireTime) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    
+    return parsed;
+  } catch (e) {
+    return null;
+  }
+};
 
 const getFavorites = () => {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  const data = getFavoritesData();
+  return data && data.items ? data.items : [];
 };
 
 const saveFavorites = (favorites) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+  const data = {
+    items: favorites,
+    expireTime: getExpireTime()
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
 export const isFavorite = (propertyId) => {

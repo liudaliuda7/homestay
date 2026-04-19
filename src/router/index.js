@@ -3,6 +3,7 @@ import HomePage from '../views/HomePage.vue';
 import PropertyPage from '../views/PropertyPage.vue';
 import AuthPage from '../views/AuthPage.vue';
 import ProfilePage from '../views/ProfilePage.vue';
+import FavoritesPage from '../views/FavoritesPage.vue';
 import { getCurrentUser } from '../data/user';
 
 const routes = [
@@ -30,10 +31,16 @@ const routes = [
     meta: { title: '注册' }
   },
   {
-    path: '/profile',
+    path: '/user/profile',
     name: 'Profile',
     component: ProfilePage,
     meta: { title: '个人中心', requiresAuth: true }
+  },
+  {
+    path: '/user/favorites',
+    name: 'Favorites',
+    component: FavoritesPage,
+    meta: { title: '我的收藏', requiresAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',
