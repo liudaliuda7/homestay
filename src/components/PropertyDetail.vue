@@ -242,13 +242,69 @@
         </div>
       </div>
     </div>
+    
+    <el-dialog
+      v-model="bookingDialogVisible"
+      title="确认预订信息"
+      width="500px"
+      :close-on-click-modal="false"
+      center
+    >
+      <div class="booking-dialog-content">
+        <div class="booking-property">
+          <div class="property-img">
+            <img :src="property?.images?.[0] || DEFAULT_PROPERTY_IMAGE" :alt="property?.title" />
+          </div>
+          <div class="property-detail">
+            <h3 class="property-title">{{ property?.title }}</h3>
+            <p class="property-loc">📍 {{ property?.location }}</p>
+          </div>
+        </div>
+        
+        <div class="booking-info">
+          <div class="info-row">
+            <span class="info-label">入住日期</span>
+            <span class="info-value">{{ checkInDate }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">退房日期</span>
+            <span class="info-value">{{ checkOutDate }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">入住天数</span>
+            <span class="info-value">{{ stayDays }}晚</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">房客数量</span>
+            <span class="info-value">{{ guests }}人</span>
+          </div>
+        </div>
+        
+        <div class="booking-total">
+          <span class="total-label">总价</span>
+          <span class="total-price">¥{{ totalPrice }}</span>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="bookingDialogVisible = false">取消</el-button>
+          <el-button 
+            type="danger" 
+            :loading="creatingOrder"
+            @click="handleConfirmBooking"
+          >
+            确认预订
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
 import { isFavorite, toggleFavorite } from '../data/favorites';
 import { createOrder } from '../data/orders';
@@ -272,6 +328,8 @@ const checkOutDate = ref('')
 const guests = ref(1)
 const isFavorited = ref(false)
 const isAnimating = ref(false)
+const bookingDialogVisible = ref(false)
+const creatingOrder = ref(false)
 
 // 计算当前显示的图片
 const currentImage = computed(() => {
@@ -406,7 +464,7 @@ const handleCheckOutChange = (value) => {
 }
 
 // 处理预订按钮点击
-const handleBook = async () => {
+const handleBook = () => {
   if (!checkInDate.value) {
     ElMessage({
       message: '请选择入住日期',
@@ -451,44 +509,36 @@ const handleBook = async () => {
     return
   }
   
-  try {
-    await ElMessageBox.confirm(
-      `
-        <div style="text-align: left; line-height: 1.8;">
-          <p style="margin: 0 0 12px 0;"><strong>${property.value.title}</strong></p>
-          <p style="margin: 0 0 8px 0;"><span style="color: #666;">入住日期：</span>${checkInDate.value}</p>
-          <p style="margin: 0 0 8px 0;"><span style="color: #666;">退房日期：</span>${checkOutDate.value}</p>
-          <p style="margin: 0 0 8px 0;"><span style="color: #666;">入住天数：</span>${stayDays.value}晚</p>
-          <p style="margin: 0 0 8px 0;"><span style="color: #666;">房客数量：</span>${guests.value}人</p>
-          <p style="margin: 0; font-size: 1.1rem; font-weight: 600; color: #ff5a5f;">总价：¥${totalPrice.value}</p>
-        </div>
-      `,
-      '确认预订信息',
-      {
-        confirmButtonText: '确认预订',
-        cancelButtonText: '取消',
-        type: 'info',
-        dangerouslyUseHTMLString: true,
-        confirmButtonClass: 'custom-confirm-btn'
-      }
-    )
-    
-    const orderData = {
-      propertyId: property.value.id,
-      propertyTitle: property.value.title,
-      propertyImage: property.value.images[0] || '',
-      location: property.value.location,
-      price: property.value.price,
-      checkInDate: checkInDate.value,
-      checkOutDate: checkOutDate.value,
-      guests: guests.value,
-      stayDays: stayDays.value,
-      totalPrice: totalPrice.value
-    }
-    
+  bookingDialogVisible.value = true
+}
+
+// 处理确认预订
+const handleConfirmBooking = async () => {
+  creatingOrder.value = true
+  
+  const user = getCurrentUser()
+  
+  const orderData = {
+    propertyId: property.value.id,
+    propertyTitle: property.value.title,
+    propertyImage: property.value.images[0] || '',
+    location: property.value.location,
+    price: property.value.price,
+    checkInDate: checkInDate.value,
+    checkOutDate: checkOutDate.value,
+    guests: guests.value,
+    stayDays: stayDays.value,
+    totalPrice: totalPrice.value
+  }
+  
+  setTimeout(() => {
     const result = createOrder(orderData, user.id)
     
+    creatingOrder.value = false
+    
     if (result.success) {
+      bookingDialogVisible.value = false
+      
       ElMessage({
         message: '订单创建成功，请完成支付',
         type: 'success',
@@ -505,9 +555,7 @@ const handleBook = async () => {
         duration: 2000
       })
     }
-  } catch {
-    // 用户取消了预订
-  }
+  }, 500)
 }
 
 // 处理收藏切换
@@ -1235,5 +1283,109 @@ onMounted(() => {
   .booking-card {
     padding: 1.25rem;
   }
+}
+</style>
+
+<style>
+.booking-dialog-content {
+  padding: 0.5rem 0;
+}
+
+.booking-dialog-content .booking-property {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 1rem;
+}
+
+.booking-dialog-content .booking-property .property-img {
+  width: 100px;
+  height: 75px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.booking-dialog-content .booking-property .property-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.booking-dialog-content .booking-property .property-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.booking-dialog-content .booking-property .property-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.booking-dialog-content .booking-property .property-loc {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+.booking-dialog-content .booking-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.booking-dialog-content .booking-info .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.booking-dialog-content .booking-info .info-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.booking-dialog-content .booking-info .info-value {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.booking-dialog-content .booking-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.booking-dialog-content .booking-total .total-label {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.booking-dialog-content .booking-total .total-price {
+  font-size: 1.4rem;
+  color: #ff5a5f;
+  font-weight: 700;
+}
+
+.booking-dialog-content .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 </style>
