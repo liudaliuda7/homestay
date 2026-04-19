@@ -50,15 +50,15 @@
               
               <div class="dropdown-divider"></div>
               
-              <router-link to="/profile" class="dropdown-item" @click="userDropdownOpen = false">
+              <router-link to="/user/profile" class="dropdown-item" @click="userDropdownOpen = false">
                 <span class="dropdown-icon">👤</span>
                 <span>个人中心</span>
               </router-link>
               
-              <a href="#" class="dropdown-item">
+              <router-link to="/user/favorites" class="dropdown-item" @click="userDropdownOpen = false">
                 <span class="dropdown-icon">❤️</span>
                 <span>我的收藏</span>
-              </a>
+              </router-link>
               
               <a href="#" class="dropdown-item">
                 <span class="dropdown-icon">📋</span>
