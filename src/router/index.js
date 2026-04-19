@@ -3,7 +3,11 @@ import HomePage from '../views/HomePage.vue';
 import PropertyPage from '../views/PropertyPage.vue';
 import AuthPage from '../views/AuthPage.vue';
 import ProfilePage from '../views/ProfilePage.vue';
-import FavoritesPage from '../views/FavoritesPage.vue';
+import ProfileInfo from '../components/ProfileInfo.vue';
+import OrderList from '../components/OrderList.vue';
+import FavoritesList from '../components/FavoritesList.vue';
+import SecuritySettings from '../components/SecuritySettings.vue';
+import HelpCenter from '../components/HelpCenter.vue';
 import { getCurrentUser } from '../data/user';
 
 const routes = [
@@ -31,16 +35,43 @@ const routes = [
     meta: { title: '注册' }
   },
   {
-    path: '/user/profile',
-    name: 'Profile',
+    path: '/user',
+    name: 'UserCenter',
     component: ProfilePage,
-    meta: { title: '个人中心', requiresAuth: true }
-  },
-  {
-    path: '/user/favorites',
-    name: 'Favorites',
-    component: FavoritesPage,
-    meta: { title: '我的收藏', requiresAuth: true }
+    meta: { title: '个人中心', requiresAuth: true },
+    redirect: '/user/profile',
+    children: [
+      {
+        path: 'profile',
+        name: 'UserProfile',
+        component: ProfileInfo,
+        meta: { title: '个人信息' }
+      },
+      {
+        path: 'order',
+        name: 'UserOrder',
+        component: OrderList,
+        meta: { title: '我的订单' }
+      },
+      {
+        path: 'favorites',
+        name: 'UserFavorites',
+        component: FavoritesList,
+        meta: { title: '我的收藏' }
+      },
+      {
+        path: 'security',
+        name: 'UserSecurity',
+        component: SecuritySettings,
+        meta: { title: '账户安全' }
+      },
+      {
+        path: 'help',
+        name: 'UserHelp',
+        component: HelpCenter,
+        meta: { title: '帮助中心' }
+      }
+    ]
   },
   {
     path: '/:pathMatch(.*)*',

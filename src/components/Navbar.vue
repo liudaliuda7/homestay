@@ -55,15 +55,15 @@
                 <span>个人中心</span>
               </router-link>
               
+              <router-link to="/user/order" class="dropdown-item" @click="userDropdownOpen = false">
+                <span class="dropdown-icon">📋</span>
+                <span>我的订单</span>
+              </router-link>
+              
               <router-link to="/user/favorites" class="dropdown-item" @click="userDropdownOpen = false">
                 <span class="dropdown-icon">❤️</span>
                 <span>我的收藏</span>
               </router-link>
-              
-              <a href="#" class="dropdown-item">
-                <span class="dropdown-icon">📋</span>
-                <span>我的订单</span>
-              </a>
               
               <div class="dropdown-divider"></div>
               
