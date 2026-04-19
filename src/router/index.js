@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../views/HomePage.vue';
 import PropertyPage from '../views/PropertyPage.vue';
 import AuthPage from '../views/AuthPage.vue';
+import PayPage from '../views/PayPage.vue';
 import ProfilePage from '../views/ProfilePage.vue';
 import ProfileInfo from '../components/ProfileInfo.vue';
 import OrderList from '../components/OrderList.vue';
@@ -33,6 +34,12 @@ const routes = [
     name: 'Register',
     component: AuthPage,
     meta: { title: '注册' }
+  },
+  {
+    path: '/pay/:orderId',
+    name: 'Pay',
+    component: PayPage,
+    meta: { title: '订单支付', requiresAuth: true }
   },
   {
     path: '/user',

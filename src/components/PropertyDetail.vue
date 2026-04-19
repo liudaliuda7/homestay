@@ -247,12 +247,15 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
 import { isFavorite, toggleFavorite } from '../data/favorites';
+import { createOrder } from '../data/orders';
+import { getCurrentUser } from '../data/user';
 
 const route = useRoute()
+const router = useRouter()
 
 // 默认图片URL
 const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/800/600'
@@ -403,13 +406,108 @@ const handleCheckOutChange = (value) => {
 }
 
 // 处理预订按钮点击
-const handleBook = () => {
-  if (!checkInDate.value || !checkOutDate.value || stayDays.value === 0) {
-    alert('请选择有效的入住和退房日期');
-    return;
+const handleBook = async () => {
+  if (!checkInDate.value) {
+    ElMessage({
+      message: '请选择入住日期',
+      type: 'warning',
+      duration: 2000
+    })
+    return
   }
   
-  alert(`预订成功！\n入住日期：${checkInDate.value}\n退房日期：${checkOutDate.value}\n入住天数：${stayDays.value}晚\n房客数量：${guests.value}人\n总价：¥${totalPrice.value}`);
+  if (!checkOutDate.value) {
+    ElMessage({
+      message: '请选择退房日期',
+      type: 'warning',
+      duration: 2000
+    })
+    return
+  }
+  
+  if (stayDays.value === 0) {
+    ElMessage({
+      message: '退房日期必须晚于入住日期',
+      type: 'warning',
+      duration: 2000
+    })
+    return
+  }
+  
+  const user = getCurrentUser()
+  if (!user) {
+    ElMessage({
+      message: '请先登录后再预订',
+      type: 'warning',
+      duration: 2000
+    })
+    
+    setTimeout(() => {
+      router.push({
+        path: '/login',
+        query: { redirect: `/property/${property.value.id}` }
+      })
+    }, 500)
+    return
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `
+        <div style="text-align: left; line-height: 1.8;">
+          <p style="margin: 0 0 12px 0;"><strong>${property.value.title}</strong></p>
+          <p style="margin: 0 0 8px 0;"><span style="color: #666;">入住日期：</span>${checkInDate.value}</p>
+          <p style="margin: 0 0 8px 0;"><span style="color: #666;">退房日期：</span>${checkOutDate.value}</p>
+          <p style="margin: 0 0 8px 0;"><span style="color: #666;">入住天数：</span>${stayDays.value}晚</p>
+          <p style="margin: 0 0 8px 0;"><span style="color: #666;">房客数量：</span>${guests.value}人</p>
+          <p style="margin: 0; font-size: 1.1rem; font-weight: 600; color: #ff5a5f;">总价：¥${totalPrice.value}</p>
+        </div>
+      `,
+      '确认预订信息',
+      {
+        confirmButtonText: '确认预订',
+        cancelButtonText: '取消',
+        type: 'info',
+        dangerouslyUseHTMLString: true,
+        confirmButtonClass: 'custom-confirm-btn'
+      }
+    )
+    
+    const orderData = {
+      propertyId: property.value.id,
+      propertyTitle: property.value.title,
+      propertyImage: property.value.images[0] || '',
+      location: property.value.location,
+      price: property.value.price,
+      checkInDate: checkInDate.value,
+      checkOutDate: checkOutDate.value,
+      guests: guests.value,
+      stayDays: stayDays.value,
+      totalPrice: totalPrice.value
+    }
+    
+    const result = createOrder(orderData, user.id)
+    
+    if (result.success) {
+      ElMessage({
+        message: '订单创建成功，请完成支付',
+        type: 'success',
+        duration: 2000
+      })
+      
+      setTimeout(() => {
+        router.push(`/pay/${result.order.id}`)
+      }, 500)
+    } else {
+      ElMessage({
+        message: result.message || '订单创建失败',
+        type: 'error',
+        duration: 2000
+      })
+    }
+  } catch {
+    // 用户取消了预订
+  }
 }
 
 // 处理收藏切换
