@@ -14,184 +14,22 @@
           </div>
           
           <div class="sidebar-menu">
-            <button 
+            <router-link 
               v-for="item in menuItems" 
               :key="item.id"
+              :to="item.path"
               class="menu-item" 
-              :class="{ active: activeMenu === item.id }"
-              @click="activeMenu = item.id"
+              :class="{ active: isActiveMenu(item.id) }"
             >
               <span class="menu-icon">{{ item.icon }}</span>
               <span class="menu-text">{{ item.name }}</span>
               <span v-if="item.badge" class="menu-badge">{{ item.badge }}</span>
-            </button>
+            </router-link>
           </div>
         </div>
         
         <div class="content">
-          <Transition name="fade" mode="out-in">
-            <div v-if="activeMenu === 'profile'" key="profile" class="content-section">
-              <div class="section-header">
-                <h2>个人信息</h2>
-                <p>管理您的基本信息</p>
-              </div>
-              
-              <div class="info-cards">
-                <div class="info-card">
-                  <div class="card-header">
-                    <h3>基本信息</h3>
-                    <button class="edit-btn" @click="toggleEditProfile">
-                      {{ isEditing ? '取消' : '编辑' }}
-                    </button>
-                  </div>
-                  
-                  <el-form :model="editForm" label-position="left" label-width="100px" class="info-form">
-                    <el-form-item label="用户名">
-                      <el-input v-model="editForm.username" :disabled="!isEditing" />
-                    </el-form-item>
-                    
-                    <el-form-item label="邮箱">
-                      <el-input 
-                        v-model="editForm.email" 
-                        :disabled="!isEditing"
-                        placeholder="请输入邮箱地址"
-                      />
-                    </el-form-item>
-                    
-                    <el-form-item label="手机号">
-                      <el-input 
-                        v-model="editForm.phone" 
-                        :disabled="!isEditing"
-                        placeholder="请输入手机号码"
-                      />
-                    </el-form-item>
-                    
-                    <el-form-item v-if="isEditing">
-                      <el-button type="primary" @click="saveProfile">保存修改</el-button>
-                    </el-form-item>
-                  </el-form>
-                </div>
-                
-                <div class="info-card">
-                  <div class="card-header">
-                    <h3>头像设置</h3>
-                  </div>
-                  
-                  <div class="avatar-setting">
-                    <div class="current-avatar">
-                      <img :src="userInfo.avatar" :alt="userInfo.username" />
-                    </div>
-                    <div class="avatar-options">
-                      <p>选择默认头像：</p>
-                      <div class="avatar-list">
-                        <img 
-                          v-for="(avatar, index) in avatarOptions" 
-                          :key="index"
-                          :src="avatar" 
-                          :alt="`头像${index + 1}`"
-                          class="avatar-option"
-                          :class="{ selected: selectedAvatar === avatar }"
-                          @click="selectAvatar(avatar)"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div v-else-if="activeMenu === 'orders'" key="orders" class="content-section">
-              <div class="section-header">
-                <h2>我的订单</h2>
-                <p>查看您的预订记录</p>
-              </div>
-              
-              <div class="empty-state">
-                <div class="empty-icon">📋</div>
-                <h3>暂无订单</h3>
-                <p>您还没有任何预订订单</p>
-                <router-link to="/" class="empty-btn">去预订</router-link>
-              </div>
-            </div>
-            
-            <div v-else-if="activeMenu === 'favorites'" key="favorites" class="content-section">
-              <div class="section-header">
-                <h2>我的收藏</h2>
-                <p>您收藏的房源列表</p>
-              </div>
-              
-              <div class="empty-state">
-                <div class="empty-icon">❤️</div>
-                <h3>暂无收藏</h3>
-                <p>去发现喜欢的房源吧</p>
-                <router-link to="/" class="empty-btn">浏览房源</router-link>
-              </div>
-            </div>
-            
-            <div v-else-if="activeMenu === 'security'" key="security" class="content-section">
-              <div class="section-header">
-                <h2>账户安全</h2>
-                <p>保护您的账户安全</p>
-              </div>
-              
-              <div class="security-list">
-                <div class="security-item">
-                  <div class="security-info">
-                    <span class="security-icon">🔐</span>
-                    <div>
-                      <h4>登录密码</h4>
-                      <p>定期修改密码可以保护账户安全</p>
-                    </div>
-                  </div>
-                  <button class="action-btn">修改</button>
-                </div>
-                
-                <div class="security-item">
-                  <div class="security-info">
-                    <span class="security-icon">📱</span>
-                    <div>
-                      <h4>绑定手机</h4>
-                      <p>{{ userInfo.phone || '未绑定' }}</p>
-                    </div>
-                  </div>
-                  <button class="action-btn">{{ userInfo.phone ? '更换' : '绑定' }}</button>
-                </div>
-                
-                <div class="security-item">
-                  <div class="security-info">
-                    <span class="security-icon">📧</span>
-                    <div>
-                      <h4>绑定邮箱</h4>
-                      <p>{{ userInfo.email || '未绑定' }}</p>
-                    </div>
-                  </div>
-                  <button class="action-btn">{{ userInfo.email ? '更换' : '绑定' }}</button>
-                </div>
-              </div>
-            </div>
-            
-            <div v-else-if="activeMenu === 'help'" key="help" class="content-section">
-              <div class="section-header">
-                <h2>帮助中心</h2>
-                <p>常见问题解答</p>
-              </div>
-              
-              <div class="help-list">
-                <div class="help-item">
-                  <h4>如何预订房源？</h4>
-                  <p>浏览房源后，选择入住日期和房客数量，点击预订按钮即可完成预订。</p>
-                </div>
-                <div class="help-item">
-                  <h4>如何取消预订？</h4>
-                  <p>在订单详情页点击取消预订，根据取消政策可能会有部分退款。</p>
-                </div>
-                <div class="help-item">
-                  <h4>联系客服</h4>
-                  <p>如有其他问题，请拨打客服热线：400-888-8888</p>
-                </div>
-              </div>
-            </div>
-          </Transition>
+          <router-view :userInfo="userInfo" @update:userInfo="handleUpdateUserInfo" />
         </div>
       </div>
     </div>
@@ -199,16 +37,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getCurrentUser, updateUserInfo } from '../data/user'
+import { getFavoriteCount } from '../data/favorites'
 
+const route = useRoute()
 const router = useRouter()
-
-const activeMenu = ref('profile')
-const isEditing = ref(false)
-const selectedAvatar = ref('')
 
 const userInfo = ref({
   id: 0,
@@ -218,68 +54,27 @@ const userInfo = ref({
   phone: ''
 })
 
-const editForm = reactive({
-  username: '',
-  email: '',
-  phone: ''
-})
+const menuItems = computed(() => [
+  { id: 'profile', name: '个人信息', icon: '👤', path: '/user/profile' },
+  { id: 'order', name: '我的订单', icon: '📋', path: '/user/order', badge: 0 },
+  { id: 'favorites', name: '我的收藏', icon: '❤️', path: '/user/favorites', badge: getFavoriteCount() },
+  { id: 'security', name: '账户安全', icon: '🔐', path: '/user/security' },
+  { id: 'help', name: '帮助中心', icon: '❓', path: '/user/help' }
+])
 
-const menuItems = [
-  { id: 'profile', name: '个人信息', icon: '👤' },
-  { id: 'orders', name: '我的订单', icon: '📋', badge: 0 },
-  { id: 'favorites', name: '我的收藏', icon: '❤️', badge: 0 },
-  { id: 'security', name: '账户安全', icon: '🔐' },
-  { id: 'help', name: '帮助中心', icon: '❓' }
-]
-
-const avatarOptions = [
-  'https://picsum.photos/id/1001/100/100',
-  'https://picsum.photos/id/1002/100/100',
-  'https://picsum.photos/id/1005/100/100',
-  'https://picsum.photos/id/1012/100/100',
-  'https://picsum.photos/id/1025/100/100',
-  'https://picsum.photos/id/1027/100/100'
-]
-
-const toggleEditProfile = () => {
-  if (isEditing.value) {
-    editForm.username = userInfo.value.username
-    editForm.email = userInfo.value.email
-    editForm.phone = userInfo.value.phone
+const isActiveMenu = (menuId) => {
+  const pathMap = {
+    'profile': '/user/profile',
+    'order': '/user/order',
+    'favorites': '/user/favorites',
+    'security': '/user/security',
+    'help': '/user/help'
   }
-  isEditing.value = !isEditing.value
+  return route.path === pathMap[menuId]
 }
 
-const saveProfile = () => {
-  const updates = {}
-  if (editForm.email !== userInfo.value.email) {
-    updates.email = editForm.email
-  }
-  if (editForm.phone !== userInfo.value.phone) {
-    updates.phone = editForm.phone
-  }
-  
-  if (selectedAvatar.value && selectedAvatar.value !== userInfo.value.avatar) {
-    updates.avatar = selectedAvatar.value
-  }
-  
-  if (Object.keys(updates).length > 0) {
-    const result = updateUserInfo(updates)
-    if (result.success) {
-      Object.assign(userInfo.value, result.user)
-      ElMessage.success('保存成功！')
-      isEditing.value = false
-    } else {
-      ElMessage.error(result.message)
-    }
-  } else {
-    ElMessage.info('没有修改内容')
-    isEditing.value = false
-  }
-}
-
-const selectAvatar = (avatar) => {
-  selectedAvatar.value = avatar
+const handleUpdateUserInfo = (updatedUser) => {
+  Object.assign(userInfo.value, updatedUser)
 }
 
 onMounted(() => {
@@ -291,10 +86,6 @@ onMounted(() => {
   }
   
   userInfo.value = { ...user }
-  editForm.username = user.username
-  editForm.email = user.email || ''
-  editForm.phone = user.phone || ''
-  selectedAvatar.value = user.avatar
 })
 </script>
 
@@ -315,6 +106,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 2rem;
+  min-height: calc(100vh - 240px);
 }
 
 .sidebar {
@@ -322,13 +114,17 @@ onMounted(() => {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  align-self: start;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 240px);
+  margin-bottom: 80px;
 }
 
 .sidebar-header {
   padding: 2rem;
   background: linear-gradient(135deg, #ff5a5f 0%, #ff7a7f 100%);
   text-align: center;
+  flex-shrink: 0;
 }
 
 .user-avatar-large {
@@ -364,6 +160,8 @@ onMounted(() => {
 
 .sidebar-menu {
   padding: 1rem 0;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .menu-item {
@@ -377,6 +175,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
+  text-decoration: none;
 }
 
 .menu-item:hover {
@@ -419,244 +218,6 @@ onMounted(() => {
   min-height: 400px;
 }
 
-.content-section {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-.section-header {
-  margin-bottom: 2rem;
-}
-
-.section-header h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 0.5rem 0;
-}
-
-.section-header p {
-  color: #666;
-  margin: 0;
-}
-
-.info-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.info-card {
-  background: #fafafa;
-  border-radius: 12px;
-  padding: 1.5rem;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.card-header h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.edit-btn {
-  background: none;
-  border: 1px solid #ff5a5f;
-  color: #ff5a5f;
-  padding: 0.375rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.edit-btn:hover {
-  background: #ff5a5f;
-  color: white;
-}
-
-.info-form {
-  max-width: 500px;
-}
-
-.avatar-setting {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
-}
-
-.current-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid #f0f0f0;
-}
-
-.current-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-options {
-  flex: 1;
-}
-
-.avatar-options p {
-  color: #666;
-  margin: 0 0 1rem 0;
-  font-size: 0.9rem;
-}
-
-.avatar-list {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.avatar-option {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: all 0.2s;
-}
-
-.avatar-option:hover {
-  transform: scale(1.1);
-}
-
-.avatar-option.selected {
-  border-color: #ff5a5f;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-}
-
-.empty-state h3 {
-  font-size: 1.25rem;
-  color: #333;
-  margin: 0 0 0.75rem 0;
-}
-
-.empty-state p {
-  color: #666;
-  margin: 0 0 1.5rem 0;
-}
-
-.empty-btn {
-  display: inline-block;
-  padding: 0.75rem 2rem;
-  background: #ff5a5f;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.empty-btn:hover {
-  background: #ff474c;
-}
-
-.security-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.security-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  background: #fafafa;
-  border-radius: 12px;
-}
-
-.security-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.security-icon {
-  font-size: 1.75rem;
-}
-
-.security-info h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.25rem 0;
-}
-
-.security-info p {
-  font-size: 0.875rem;
-  color: #666;
-  margin: 0;
-}
-
-.action-btn {
-  padding: 0.5rem 1.5rem;
-  border: 1px solid #ff5a5f;
-  color: #ff5a5f;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background: #ff5a5f;
-  color: white;
-}
-
-.help-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.help-item {
-  padding: 1.5rem;
-  background: #fafafa;
-  border-radius: 12px;
-}
-
-.help-item h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 0.5rem 0;
-}
-
-.help-item p {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0;
-  line-height: 1.6;
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -676,6 +237,8 @@ onMounted(() => {
   .sidebar {
     position: sticky;
     top: 80px;
+    height: auto;
+    margin-bottom: 0;
   }
   
   .sidebar-header {
@@ -717,26 +280,6 @@ onMounted(() => {
 @media (max-width: 480px) {
   .profile-page {
     padding: 1rem 0;
-  }
-  
-  .content-section {
-    padding: 1.5rem;
-  }
-  
-  .avatar-setting {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  
-  .security-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .action-btn {
-    width: 100%;
   }
 }
 </style>
