@@ -7,12 +7,29 @@ export const AMENITIES_LIST = [
 ];
 
 export const PRICE_OPTIONS = [
-  { label: '不限', value: [0, 2000] },
-  { label: '¥0-¥300', value: [0, 300] },
-  { label: '¥300-¥600', value: [300, 600] },
-  { label: '¥600-¥1000', value: [600, 1000] },
-  { label: '¥1000-¥2000', value: [1000, 2000] }
+  { label: '不限', value: [0, 2000], key: 'unlimited' },
+  { label: '¥0-¥300', value: [0, 300], key: '0-300' },
+  { label: '¥300-¥600', value: [300, 600], key: '300-600' },
+  { label: '¥600-¥1000', value: [600, 1000], key: '600-1000' },
+  { label: '¥1000-¥2000', value: [1000, 2000], key: '1000-2000' }
 ];
+
+export const PRICE_SELECT_OPTIONS = [
+  { value: 'unlimited', label: '不限价格', min: 0, max: 2000 },
+  { value: '0-300', label: '¥0-¥300', min: 0, max: 300 },
+  { value: '300-600', label: '¥300-¥600', min: 300, max: 600 },
+  { value: '600-1000', label: '¥600-¥1000', min: 600, max: 1000 },
+  { value: '1000-2000', label: '¥1000-¥2000', min: 1000, max: 2000 }
+];
+
+export const getPriceOptionByKey = (key) => {
+  return PRICE_SELECT_OPTIONS.find(opt => opt.value === key) || PRICE_SELECT_OPTIONS[0];
+};
+
+export const getPriceKeyByRange = (min, max) => {
+  const option = PRICE_SELECT_OPTIONS.find(opt => opt.min === min && opt.max === max);
+  return option ? option.value : 'unlimited';
+};
 
 export const RATING_OPTIONS = [
   { label: '不限', value: 0 },
@@ -21,12 +38,45 @@ export const RATING_OPTIONS = [
   { label: '4.5分以上', value: 4.5 }
 ];
 
+export const RATING_SELECT_OPTIONS = [
+  { value: 0, label: '不限评分' },
+  { value: 3.5, label: '3.5分以上' },
+  { value: 4.0, label: '4.0分以上' },
+  { value: 4.5, label: '4.5分以上' }
+];
+
 export const ROOM_OPTIONS = [
   { label: '不限', value: 0 },
   { label: '1室', value: 1 },
   { label: '2室', value: 2 },
   { label: '3室+', value: 3 }
 ];
+
+export const BEDROOM_SELECT_OPTIONS = [
+  { value: 0, label: '不限卧室' },
+  { value: 1, label: '1室' },
+  { value: 2, label: '2室' },
+  { value: 3, label: '3室+' }
+];
+
+export const BATHROOM_SELECT_OPTIONS = [
+  { value: 0, label: '不限卫生间' },
+  { value: 1, label: '1卫' },
+  { value: 2, label: '2卫' },
+  { value: 3, label: '3卫+' }
+];
+
+export const BEDS_SELECT_OPTIONS = [
+  { value: 0, label: '不限床位' },
+  { value: 1, label: '1床' },
+  { value: 2, label: '2床' },
+  { value: 3, label: '3床+' }
+];
+
+export const AMENITIES_SELECT_OPTIONS = AMENITIES_LIST.map(a => ({
+  value: a,
+  label: a
+}));
 
 export const filterProperties = (properties, filters) => {
   return properties.filter(property => {

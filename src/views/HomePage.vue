@@ -7,62 +7,58 @@
         </div>
       </Transition>
       
+      <FilterBar 
+        v-model:filters="filters"
+      />
+      
       <FilterTags 
         v-model:filters="filters"
       />
       
-      <div class="main-content">
-        <div class="content-left">
-          <FilterPanel 
-            v-model:filters="filters"
-          />
+      <div class="content-wrapper">
+        <div class="search-result">
+          <h2>{{ filteredProperties.length }}套房源</h2>
+          <div class="sort-options">
+            <span>排序：</span>
+            <select v-model="sortBy" @change="handleSort" class="sort-select">
+              <option value="recommended">推荐</option>
+              <option value="price-low">价格从低到高</option>
+              <option value="price-high">价格从高到低</option>
+              <option value="rating">评分最高</option>
+            </select>
+          </div>
         </div>
         
-        <div class="content-right">
-          <div class="search-result">
-            <h2>{{ filteredProperties.length }}套房源</h2>
-            <div class="sort-options">
-              <span>排序：</span>
-              <select v-model="sortBy" @change="handleSort" class="sort-select">
-                <option value="recommended">推荐</option>
-                <option value="price-low">价格从低到高</option>
-                <option value="price-high">价格从高到低</option>
-                <option value="rating">评分最高</option>
-              </select>
-            </div>
+        <Transition name="fade">
+          <div v-if="!isLoading && filteredProperties.length > 0" class="properties-grid">
+            <PropertyCard 
+              v-for="property in filteredProperties" 
+              :key="property.id" 
+              :property="property" 
+            />
           </div>
-          
-          <Transition name="fade">
-            <div v-if="!isLoading && filteredProperties.length > 0" class="properties-grid">
-              <PropertyCard 
-                v-for="property in filteredProperties" 
-                :key="property.id" 
-                :property="property" 
-              />
-            </div>
-          </Transition>
-          
-          <Transition name="fade">
-            <div v-if="!isLoading && filteredProperties.length === 0" class="empty-state">
-              <div class="empty-icon">🔍</div>
-              <h3>未找到匹配的房源</h3>
-              <p>请尝试其他搜索关键词或调整筛选条件</p>
-              <el-button type="danger" @click="clearAllFilters">
-                清除所有筛选
-              </el-button>
-            </div>
-          </Transition>
-        </div>
+        </Transition>
+        
+        <Transition name="fade">
+          <div v-if="!isLoading && filteredProperties.length === 0" class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>未找到匹配的房源</h3>
+            <p>请尝试其他搜索关键词或调整筛选条件</p>
+            <el-button type="danger" @click="clearAllFilters">
+              清除所有筛选
+            </el-button>
+          </div>
+        </Transition>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PropertyCard from '../components/PropertyCard.vue';
-import FilterPanel from '../components/FilterPanel.vue';
+import FilterBar from '../components/FilterBar.vue';
 import FilterTags from '../components/FilterTags.vue';
 import { properties, searchProperties } from '../data/properties';
 import { filterProperties, parseFiltersFromQuery, buildQueryFromFilters } from '../data/filter';
@@ -70,7 +66,6 @@ import { filterProperties, parseFiltersFromQuery, buildQueryFromFilters } from '
 const route = useRoute()
 const router = useRouter()
 
-const allProperties = ref(properties)
 const filteredProperties = ref(properties)
 const sortBy = ref('recommended')
 const isLoading = ref(false)
@@ -181,7 +176,7 @@ onMounted(() => {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -213,18 +208,8 @@ onMounted(() => {
   100% { transform: rotate(360deg); }
 }
 
-.main-content {
-  display: flex;
-  gap: 2rem;
-}
-
-.content-left {
-  flex-shrink: 0;
-}
-
-.content-right {
-  flex: 1;
-  min-width: 0;
+.content-wrapper {
+  background-color: transparent;
 }
 
 .search-result {
@@ -232,6 +217,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 0;
 }
 
 .search-result h2 {
@@ -297,14 +283,6 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .main-content {
-    flex-direction: column;
-  }
-  
-  .content-left {
-    width: 100%;
-  }
-  
   .properties-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.25rem;
