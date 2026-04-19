@@ -48,11 +48,11 @@
                 </div>
                 <button 
                   class="favorite-btn" 
-                  :class="{ active: isFavorite, animating: isAnimating }"
+                  :class="{ active: isFavorited, animating: isAnimating }"
                   @click="handleToggleFavorite"
                 >
-                  <span class="heart-icon">{{ isFavorite ? '❤️' : '🤍' }}</span>
-                  <span class="favorite-label">{{ isFavorite ? '已收藏' : '收藏' }}</span>
+                  <span class="heart-icon">{{ isFavorited ? '❤️' : '🤍' }}</span>
+                  <span class="favorite-label">{{ isFavorited ? '已收藏' : '收藏' }}</span>
                 </button>
               </div>
             </div>
@@ -267,7 +267,7 @@ const propertyReviews = ref([])
 const checkInDate = ref('')
 const checkOutDate = ref('')
 const guests = ref(1)
-const isFavorite = ref(false)
+const isFavorited = ref(false)
 const isAnimating = ref(false)
 
 // 计算当前显示的图片
@@ -366,7 +366,7 @@ const loadProperty = () => {
   }
   
   property.value = data;
-  isFavorite.value = isFavorite(id);
+  isFavorited.value = isFavorite(id);
   loading.value = false;
 }
 
@@ -419,7 +419,7 @@ const handleToggleFavorite = () => {
   isAnimating.value = true;
   
   const result = toggleFavorite(property.value.id);
-  isFavorite.value = result.isFavorite;
+  isFavorited.value = result.isFavorite;
   
   if (result.isFavorite) {
     ElMessage({
