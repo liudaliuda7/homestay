@@ -40,10 +40,20 @@
           <div class="info-section">
             <div class="header">
               <h1 class="title">{{ property.title }}</h1>
-              <div class="rating">
-                <span class="star">⭐</span>
-                <span>{{ property.rating }}</span>
-                <span>({{ property.reviews }}条评价)</span>
+              <div class="header-right">
+                <div class="rating">
+                  <span class="star">⭐</span>
+                  <span>{{ property.rating }}</span>
+                  <span>({{ property.reviews }}条评价)</span>
+                </div>
+                <button 
+                  class="favorite-btn" 
+                  :class="{ active: isFavorite, animating: isAnimating }"
+                  @click="handleToggleFavorite"
+                >
+                  <span class="heart-icon">{{ isFavorite ? '❤️' : '🤍' }}</span>
+                  <span class="favorite-label">{{ isFavorite ? '已收藏' : '收藏' }}</span>
+                </button>
               </div>
             </div>
             
@@ -236,9 +246,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
+import { isFavorite, toggleFavorite } from '../data/favorites';
 
 const route = useRoute()
 
@@ -255,6 +267,8 @@ const propertyReviews = ref([])
 const checkInDate = ref('')
 const checkOutDate = ref('')
 const guests = ref(1)
+const isFavorite = ref(false)
+const isAnimating = ref(false)
 
 // 计算当前显示的图片
 const currentImage = computed(() => {
@@ -352,6 +366,7 @@ const loadProperty = () => {
   }
   
   property.value = data;
+  isFavorite.value = isFavorite(id);
   loading.value = false;
 }
 
@@ -395,6 +410,34 @@ const handleBook = () => {
   }
   
   alert(`预订成功！\n入住日期：${checkInDate.value}\n退房日期：${checkOutDate.value}\n入住天数：${stayDays.value}晚\n房客数量：${guests.value}人\n总价：¥${totalPrice.value}`);
+}
+
+// 处理收藏切换
+const handleToggleFavorite = () => {
+  if (!property.value) return;
+  
+  isAnimating.value = true;
+  
+  const result = toggleFavorite(property.value.id);
+  isFavorite.value = result.isFavorite;
+  
+  if (result.isFavorite) {
+    ElMessage({
+      message: '收藏成功！',
+      type: 'success',
+      duration: 2000
+    });
+  } else {
+    ElMessage({
+      message: '已取消收藏',
+      type: 'info',
+      duration: 2000
+    });
+  }
+  
+  setTimeout(() => {
+    isAnimating.value = false;
+  }, 400);
 }
 
 // 组件挂载时加载数据
@@ -557,11 +600,19 @@ onMounted(() => {
   margin-bottom: 1rem;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .title {
   font-size: 1.8rem;
   font-weight: 600;
   margin: 0;
   line-height: 1.4;
+  flex: 1;
+  padding-right: 1rem;
 }
 
 .rating {
@@ -574,6 +625,64 @@ onMounted(() => {
 
 .star {
   color: #ff5a5f;
+}
+
+.favorite-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.favorite-btn:hover {
+  border-color: #ff5a5f;
+}
+
+.favorite-btn.active {
+  border-color: #ff5a5f;
+  background-color: #fff5f5;
+}
+
+.heart-icon {
+  font-size: 1.25rem;
+  transition: transform 0.3s ease;
+}
+
+.favorite-label {
+  font-size: 0.9rem;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.favorite-btn.active .favorite-label {
+  color: #ff5a5f;
+}
+
+.favorite-btn.animating .heart-icon {
+  animation: heartPop 0.4s ease;
+}
+
+@keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.4);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .location {
@@ -976,8 +1085,14 @@ onMounted(() => {
     gap: 1rem;
   }
   
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
   .title {
     font-size: 1.5rem;
+    padding-right: 0;
   }
   
   .info-section {
