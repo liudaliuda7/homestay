@@ -254,6 +254,8 @@ html {
     transform: translate3d(0, -4px, 0);
   }
 }
-.fade-leave-to {
-  opacity: 0;
+
+.highlight {
+  color: #ff5a5f;
+  font-weight: 600;
 }
