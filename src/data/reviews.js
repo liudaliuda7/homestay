@@ -2,6 +2,8 @@ const STORAGE_KEY = 'homestay_reviews';
 const EXPIRE_DAYS = 7;
 const REVIEW_EXPIRE_DAYS = 10;
 
+import { reviews as staticReviews } from './properties';
+
 export const RATING_DIMENSIONS = [
   { key: 'location', label: '位置', icon: '📍' },
   { key: 'cleanliness', label: '卫生', icon: '🧹' },
@@ -36,15 +38,35 @@ const getReviewsData = () => {
 
 const getReviews = () => {
   const data = getReviewsData();
-  return data && data.items ? data.items : [];
+  const storageReviews = data && data.items ? data.items : [];
+  
+  const maxStaticId = staticReviews.length > 0 ? Math.max(...staticReviews.map(r => r.id)) : 0;
+  const maxStorageId = storageReviews.length > 0 ? Math.max(...storageReviews.map(r => r.id)) : 0;
+  
+  if (maxStorageId <= maxStaticId) {
+    return [...staticReviews, ...storageReviews];
+  }
+  
+  const staticIds = new Set(staticReviews.map(r => r.id));
+  const filteredStorageReviews = storageReviews.filter(r => !staticIds.has(r.id));
+  
+  return [...staticReviews, ...filteredStorageReviews];
 };
 
 const saveReviews = (reviews) => {
+  const staticIds = new Set(staticReviews.map(r => r.id));
+  const storageReviews = reviews.filter(r => !staticIds.has(r.id));
+  
   const data = {
-    items: reviews,
+    items: storageReviews,
     expireTime: getExpireTime()
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
+export const getNextReviewId = () => {
+  const reviews = getReviews();
+  return reviews.length > 0 ? Math.max(...reviews.map(r => r.id)) + 1 : 1;
 };
 
 export const createReview = (reviewData) => {

@@ -44,7 +44,7 @@
                 <div class="rating">
                   <span class="star">⭐</span>
                   <span>{{ property.rating }}</span>
-                  <span>({{ property.reviews }}条评价)</span>
+                  <span>({{ propertyReviews.length }}条评价)</span>
                 </div>
                 <button 
                   class="favorite-btn" 
@@ -151,7 +151,7 @@
             
             <!-- 用户评价 -->
             <div class="reviews">
-              <h2>用户评价 ({{ property.reviews }})</h2>
+              <h2>用户评价 ({{ propertyReviews.length }})</h2>
               <div v-if="propertyReviews.length > 0" class="review-list">
                 <div v-for="review in propertyReviews" :key="review.id" class="review-item">
                   <div class="review-header">
@@ -316,7 +316,8 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getPropertyById, getReviewsByPropertyId } from '../data/properties';
+import { getPropertyById } from '../data/properties';
+import { getReviewsByPropertyId, toggleLike } from '../data/reviews';
 import { isFavorite, toggleFavorite } from '../data/favorites';
 import { createOrder } from '../data/orders';
 import { getCurrentUser } from '../data/user';
@@ -476,20 +477,17 @@ const handleToggleLike = (review) => {
     return;
   }
   
-  if (!review.likes) {
-    review.likes = { count: 0, users: [] };
-  }
-  
-  const userIndex = review.likes.users.indexOf(user.id);
-  
   animatingReviews.value.add(review.id);
   
-  if (userIndex === -1) {
-    review.likes.users.push(user.id);
-    review.likes.count++;
-  } else {
-    review.likes.users.splice(userIndex, 1);
-    review.likes.count--;
+  const result = toggleLike(review.id, user.id);
+  
+  if (result.success) {
+    if (result.review && result.review.likes) {
+      review.likes = {
+        count: result.review.likes.count,
+        users: [...result.review.likes.users]
+      };
+    }
   }
   
   setTimeout(() => {
