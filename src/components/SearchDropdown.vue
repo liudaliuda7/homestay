@@ -173,11 +173,13 @@ const fetchSuggestions = (keyword) => {
   isLoading.value = true;
   emit('loadingChange', true);
   
-  suggestions.value = getSuggestions(keyword.trim(), properties);
-  selectedIndex.value = suggestions.value.length > 0 ? 0 : 0;
-  
-  isLoading.value = false;
-  emit('loadingChange', false);
+  setTimeout(() => {
+    suggestions.value = getSuggestions(keyword.trim(), properties);
+    selectedIndex.value = suggestions.value.length > 0 ? 0 : 0;
+    
+    isLoading.value = false;
+    emit('loadingChange', false);
+  }, 100);
 };
 
 const debouncedFetchSuggestions = debounce((keyword) => {
