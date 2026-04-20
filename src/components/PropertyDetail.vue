@@ -156,16 +156,27 @@
                 <div v-for="review in propertyReviews" :key="review.id" class="review-item">
                   <div class="review-header">
                     <div class="review-user">
-                      <img :src="review.user.avatar" :alt="review.user.name" class="user-avatar" @error="handleImageError($event, 'avatar')" />
-                      <span class="user-name">{{ review.user.name }}</span>
+                      <img :src="review.userAvatar || (review.user ? review.user.avatar : '')" :alt="review.userName || (review.user ? review.user.name : '')" class="user-avatar" @error="handleImageError($event, 'avatar')" />
+                      <span class="user-name">{{ review.userName || (review.user ? review.user.name : '') }}</span>
                     </div>
                     <div class="review-rating">
                       <span class="star">⭐</span>
-                      <span>{{ review.rating }}</span>
+                      <span>{{ review.ratings ? review.ratings.overall : review.rating }}</span>
                     </div>
                   </div>
                   <div class="review-date">{{ review.date }}</div>
-                  <div class="review-content">{{ review.content }}</div>
+                  <div class="review-content">{{ review.content || review.comment }}</div>
+                  
+                  <div class="review-footer">
+                    <button 
+                      class="like-btn"
+                      :class="{ 'liked': isReviewLiked(review), 'animating': animatingReviews.has(review.id) }"
+                      @click="handleToggleLike(review)"
+                    >
+                      <span class="like-icon">{{ isReviewLiked(review) ? '❤️' : '🤍' }}</span>
+                      <span class="like-count">{{ getLikeCount(review) }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div v-else class="reviews-empty">
@@ -330,6 +341,7 @@ const isFavorited = ref(false)
 const isAnimating = ref(false)
 const bookingDialogVisible = ref(false)
 const creatingOrder = ref(false)
+const animatingReviews = ref(new Set())
 
 // 计算当前显示的图片
 const currentImage = computed(() => {
@@ -437,6 +449,52 @@ const loadReviews = () => {
   if (!isNaN(id) && id > 0) {
     propertyReviews.value = getReviewsByPropertyId(id);
   }
+}
+
+// 检查用户是否点赞了评价
+const isReviewLiked = (review) => {
+  const user = getCurrentUser();
+  if (!user || !review.likes) return false;
+  return review.likes.users && review.likes.users.includes(user.id);
+}
+
+// 获取点赞数量
+const getLikeCount = (review) => {
+  if (!review.likes) return 0;
+  return review.likes.count || 0;
+}
+
+// 切换点赞状态
+const handleToggleLike = (review) => {
+  const user = getCurrentUser();
+  if (!user) {
+    ElMessage({
+      message: '请先登录后再点赞',
+      type: 'warning',
+      duration: 2000
+    });
+    return;
+  }
+  
+  if (!review.likes) {
+    review.likes = { count: 0, users: [] };
+  }
+  
+  const userIndex = review.likes.users.indexOf(user.id);
+  
+  animatingReviews.value.add(review.id);
+  
+  if (userIndex === -1) {
+    review.likes.users.push(user.id);
+    review.likes.count++;
+  } else {
+    review.likes.users.splice(userIndex, 1);
+    review.likes.count--;
+  }
+  
+  setTimeout(() => {
+    animatingReviews.value.delete(review.id);
+  }, 300);
 }
 
 // 处理图片加载错误
@@ -1054,6 +1112,68 @@ onMounted(() => {
   font-size: 0.9rem;
   line-height: 1.6;
   color: #333;
+}
+
+.review-footer {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.like-btn:hover:not(:disabled) {
+  border-color: #ff5a5f;
+  background: #fff7f7;
+}
+
+.like-btn.liked {
+  border-color: #ff5a5f;
+  background: #fff7f7;
+}
+
+.like-btn.liked .like-icon {
+  color: #ff5a5f;
+}
+
+.like-btn.animating .like-icon {
+  animation: bounce 0.3s ease;
+}
+
+.like-icon {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.like-count {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.like-btn.liked .like-count {
+  color: #ff5a5f;
+}
+
+@keyframes bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 侧边栏 */

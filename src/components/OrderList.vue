@@ -5,108 +5,291 @@
       <p>查看您的预订记录</p>
     </div>
     
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
-      <p>加载中...</p>
-    </div>
-    
-    <div v-else-if="orders.length === 0" class="empty-state">
-      <div class="empty-icon">📋</div>
-      <h3>暂无订单</h3>
-      <p>您还没有任何预订订单</p>
-      <router-link to="/" class="empty-btn">去预订</router-link>
-    </div>
-    
-    <div v-else class="order-list">
-      <div v-for="order in orders" :key="order.id" class="order-card">
-        <div class="order-header">
-          <div class="order-no">
-            <span class="label">订单编号：</span>
-            <span class="value">{{ order.orderNo }}</span>
-          </div>
-          <div class="order-status" :class="order.status">
-            {{ getStatusText(order.status) }}
-          </div>
+    <el-tabs v-model="activeTab" type="border-card" class="order-tabs">
+      <el-tab-pane label="全部订单" name="all">
+        <div v-if="loading" class="loading">
+          <div class="spinner"></div>
+          <p>加载中...</p>
         </div>
         
-        <div class="order-content">
-          <div class="property-image">
-            <img :src="order.propertyImage || defaultImage" :alt="order.propertyTitle" />
-          </div>
-          
-          <div class="property-info">
-            <h3 class="property-title">{{ order.propertyTitle }}</h3>
-            <p class="property-location">📍 {{ order.location }}</p>
-            
-            <div class="date-info">
-              <div class="date-item">
-                <span class="date-label">入住：</span>
-                <span class="date-value">{{ order.checkInDate }}</span>
+        <div v-else-if="filteredOrders.length === 0" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>暂无订单</h3>
+          <p>您还没有任何预订订单</p>
+          <router-link to="/" class="empty-btn">去预订</router-link>
+        </div>
+        
+        <div v-else class="order-list">
+          <div v-for="order in filteredOrders" :key="order.id" class="order-card">
+            <div class="order-header">
+              <div class="order-no">
+                <span class="label">订单编号：</span>
+                <span class="value">{{ order.orderNo }}</span>
               </div>
-              <span class="date-arrow">→</span>
-              <div class="date-item">
-                <span class="date-label">退房：</span>
-                <span class="date-value">{{ order.checkOutDate }}</span>
+              <div class="order-status" :class="order.status">
+                {{ getStatusText(order.status) }}
               </div>
             </div>
             
-            <div class="extra-info">
-              <span>{{ order.stayDays }}晚</span>
-              <span>·</span>
-              <span>{{ order.guests }}位房客</span>
-              <span>·</span>
-              <span>￥{{ order.price }}/晚</span>
-            </div>
-          </div>
-          
-          <div class="order-price-section">
-            <div class="total-price">
-              <span class="price-label">总计</span>
-              <span class="price-value">￥{{ order.totalPrice }}</span>
+            <div class="order-content">
+              <div class="property-image">
+                <img :src="order.propertyImage || defaultImage" :alt="order.propertyTitle" />
+              </div>
+              
+              <div class="property-info">
+                <h3 class="property-title">{{ order.propertyTitle }}</h3>
+                <p class="property-location">📍 {{ order.location }}</p>
+                
+                <div class="date-info">
+                  <div class="date-item">
+                    <span class="date-label">入住：</span>
+                    <span class="date-value">{{ order.checkInDate }}</span>
+                  </div>
+                  <span class="date-arrow">→</span>
+                  <div class="date-item">
+                    <span class="date-label">退房：</span>
+                    <span class="date-value">{{ order.checkOutDate }}</span>
+                  </div>
+                </div>
+                
+                <div class="extra-info">
+                  <span>{{ order.stayDays }}晚</span>
+                  <span>·</span>
+                  <span>{{ order.guests }}位房客</span>
+                  <span>·</span>
+                  <span>￥{{ order.price }}/晚</span>
+                </div>
+              </div>
+              
+              <div class="order-price-section">
+                <div class="total-price">
+                  <span class="price-label">总计</span>
+                  <span class="price-value">￥{{ order.totalPrice }}</span>
+                </div>
+                
+                <div class="order-actions">
+                  <router-link 
+                    v-if="order.status === 'pending'" 
+                    :to="`/pay/${order.id}`"
+                    class="action-btn primary"
+                  >
+                    去支付
+                  </router-link>
+                  
+                  <button 
+                    v-if="order.status === 'pending'" 
+                    class="action-btn outline"
+                    @click="handleCancelOrder(order)"
+                    :disabled="cancellingId === order.id"
+                  >
+                    {{ cancellingId === order.id ? '取消中...' : '取消订单' }}
+                  </button>
+                  
+                  <router-link 
+                    v-if="order.status === 'paid'" 
+                    :to="`/property/${order.propertyId}`"
+                    class="action-btn outline"
+                  >
+                    再次预订
+                  </router-link>
+                  
+                  <button 
+                    v-if="canReview(order)"
+                    class="action-btn primary review-btn"
+                    @click="openReviewForm(order)"
+                  >
+                    去评价
+                  </button>
+                  
+                  <span 
+                    v-else-if="order.status === 'paid' && !canReview(order) && getReviewCheck(order).reason"
+                    class="review-hint"
+                  >
+                    {{ getReviewCheck(order).reason }}
+                  </span>
+                </div>
+              </div>
             </div>
             
-            <div class="order-actions">
-              <router-link 
-                v-if="order.status === 'pending'" 
-                :to="`/pay/${order.id}`"
-                class="action-btn primary"
-              >
-                去支付
-              </router-link>
-              
-              <button 
-                v-if="order.status === 'pending'" 
-                class="action-btn outline"
-                @click="handleCancelOrder(order)"
-                :disabled="cancellingId === order.id"
-              >
-                {{ cancellingId === order.id ? '取消中...' : '取消订单' }}
-              </button>
-              
-              <router-link 
-                v-if="order.status === 'paid'" 
-                :to="`/property/${order.propertyId}`"
-                class="action-btn outline"
-              >
-                再次预订
-              </router-link>
+            <div class="order-footer">
+              <span class="create-time">创建时间：{{ formatDate(order.createdAt) }}</span>
+              <span v-if="order.paidAt" class="paid-time">支付时间：{{ formatDate(order.paidAt) }}</span>
             </div>
           </div>
         </div>
-        
-        <div class="order-footer">
-          <span class="create-time">创建时间：{{ formatDate(order.createdAt) }}</span>
-          <span v-if="order.paidAt" class="paid-time">支付时间：{{ formatDate(order.paidAt) }}</span>
+      </el-tab-pane>
+      
+      <el-tab-pane label="待使用" name="pending">
+        <div v-if="loading" class="loading">
+          <div class="spinner"></div>
+          <p>加载中...</p>
         </div>
-      </div>
-    </div>
+        
+        <div v-else-if="pendingOrders.length === 0" class="empty-state">
+          <div class="empty-icon">🏠</div>
+          <h3>暂无待使用订单</h3>
+          <p>快去预订心仪的房源吧</p>
+          <router-link to="/" class="empty-btn">去预订</router-link>
+        </div>
+        
+        <div v-else class="order-list">
+          <div v-for="order in pendingOrders" :key="order.id" class="order-card">
+            <div class="order-header">
+              <div class="order-no">
+                <span class="label">订单编号：</span>
+                <span class="value">{{ order.orderNo }}</span>
+              </div>
+              <div class="order-status paid">
+                待使用
+              </div>
+            </div>
+            
+            <div class="order-content">
+              <div class="property-image">
+                <img :src="order.propertyImage || defaultImage" :alt="order.propertyTitle" />
+              </div>
+              
+              <div class="property-info">
+                <h3 class="property-title">{{ order.propertyTitle }}</h3>
+                <p class="property-location">📍 {{ order.location }}</p>
+                
+                <div class="date-info">
+                  <div class="date-item">
+                    <span class="date-label">入住：</span>
+                    <span class="date-value">{{ order.checkInDate }}</span>
+                  </div>
+                  <span class="date-arrow">→</span>
+                  <div class="date-item">
+                    <span class="date-label">退房：</span>
+                    <span class="date-value">{{ order.checkOutDate }}</span>
+                  </div>
+                </div>
+                
+                <div class="extra-info">
+                  <span>{{ order.stayDays }}晚</span>
+                  <span>·</span>
+                  <span>{{ order.guests }}位房客</span>
+                </div>
+              </div>
+              
+              <div class="order-price-section">
+                <div class="total-price">
+                  <span class="price-label">总计</span>
+                  <span class="price-value">￥{{ order.totalPrice }}</span>
+                </div>
+                
+                <div class="order-actions">
+                  <router-link 
+                    :to="`/property/${order.propertyId}`"
+                    class="action-btn outline"
+                  >
+                    查看房源
+                  </router-link>
+                </div>
+              </div>
+            </div>
+            
+            <div class="order-footer">
+              <span class="paid-time">支付时间：{{ formatDate(order.paidAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
+      
+      <el-tab-pane label="待评价" name="review">
+        <div v-if="loading" class="loading">
+          <div class="spinner"></div>
+          <p>加载中...</p>
+        </div>
+        
+        <div v-else-if="reviewOrders.length === 0" class="empty-state">
+          <div class="empty-icon">✍️</div>
+          <h3>暂无待评价订单</h3>
+          <p>完成入住后记得来评价哦</p>
+          <router-link to="/" class="empty-btn">去预订</router-link>
+        </div>
+        
+        <div v-else class="order-list">
+          <div v-for="order in reviewOrders" :key="order.id" class="order-card">
+            <div class="order-header">
+              <div class="order-no">
+                <span class="label">订单编号：</span>
+                <span class="value">{{ order.orderNo }}</span>
+              </div>
+              <div class="order-status pending-review">
+                <span class="review-countdown">
+                  还剩 {{ getReviewCheck(order).daysLeft || 0 }} 天
+                </span>
+              </div>
+            </div>
+            
+            <div class="order-content">
+              <div class="property-image">
+                <img :src="order.propertyImage || defaultImage" :alt="order.propertyTitle" />
+              </div>
+              
+              <div class="property-info">
+                <h3 class="property-title">{{ order.propertyTitle }}</h3>
+                <p class="property-location">📍 {{ order.location }}</p>
+                
+                <div class="date-info">
+                  <div class="date-item">
+                    <span class="date-label">入住：</span>
+                    <span class="date-value">{{ order.checkInDate }}</span>
+                  </div>
+                  <span class="date-arrow">→</span>
+                  <div class="date-item">
+                    <span class="date-label">退房：</span>
+                    <span class="date-value">{{ order.checkOutDate }}</span>
+                  </div>
+                </div>
+                
+                <div class="extra-info">
+                  <span>{{ order.stayDays }}晚</span>
+                  <span>·</span>
+                  <span>{{ order.guests }}位房客</span>
+                </div>
+              </div>
+              
+              <div class="order-price-section">
+                <div class="total-price">
+                  <span class="price-label">总计</span>
+                  <span class="price-value">￥{{ order.totalPrice }}</span>
+                </div>
+                
+                <div class="order-actions">
+                  <button 
+                    class="action-btn primary review-btn-large"
+                    @click="openReviewForm(order)"
+                  >
+                    发表评价
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="order-footer">
+              <span class="paid-time">支付时间：{{ formatDate(order.paidAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+    
+    <ReviewForm 
+      v-model:visible="reviewFormVisible"
+      :order="currentReviewOrder"
+      @success="onReviewSuccess"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import ReviewForm from './ReviewForm.vue'
 import { getOrdersByUserId, cancelOrder, ORDER_STATUS } from '../data/orders'
+import { checkOrderCanReview, getReviewByOrderId } from '../data/reviews'
 import { getCurrentUser } from '../data/user'
 
 const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/400/300'
@@ -114,8 +297,22 @@ const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/400/
 const loading = ref(false)
 const orders = ref([])
 const cancellingId = ref(null)
+const activeTab = ref('all')
+
+const reviewFormVisible = ref(false)
+const currentReviewOrder = ref(null)
 
 const defaultImage = DEFAULT_PROPERTY_IMAGE
+
+const filteredOrders = computed(() => orders.value)
+
+const pendingOrders = computed(() => {
+  return orders.value.filter(o => o.status === ORDER_STATUS.PAID)
+})
+
+const reviewOrders = computed(() => {
+  return orders.value.filter(o => canReview(o))
+})
 
 const getStatusText = (status) => {
   const statusMap = {
@@ -139,6 +336,16 @@ const formatDate = (dateStr) => {
   })
 }
 
+const canReview = (order) => {
+  if (!order) return false
+  const check = checkOrderCanReview(order)
+  return check.canReview
+}
+
+const getReviewCheck = (order) => {
+  return checkOrderCanReview(order)
+}
+
 const loadOrders = () => {
   loading.value = true
   
@@ -151,6 +358,30 @@ const loadOrders = () => {
   
   orders.value = getOrdersByUserId(user.id)
   loading.value = false
+}
+
+const openReviewForm = (order) => {
+  const check = checkOrderCanReview(order)
+  if (!check.canReview) {
+    ElMessage({
+      message: check.reason,
+      type: 'warning',
+      duration: 2000
+    })
+    return
+  }
+  
+  currentReviewOrder.value = order
+  reviewFormVisible.value = true
+}
+
+const onReviewSuccess = () => {
+  ElMessage({
+    message: '评价发表成功！',
+    type: 'success',
+    duration: 2000
+  })
+  loadOrders()
 }
 
 const handleCancelOrder = async (order) => {
@@ -206,7 +437,7 @@ onMounted(() => {
 }
 
 .section-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .section-header h2 {
@@ -219,6 +450,10 @@ onMounted(() => {
 .section-header p {
   color: #666;
   margin: 0;
+}
+
+.order-tabs {
+  border-radius: 12px;
 }
 
 .loading {
@@ -343,6 +578,16 @@ onMounted(() => {
 .order-status.cancelled {
   background: #f5f5f5;
   color: #999;
+}
+
+.order-status.pending-review {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.review-countdown {
+  display: inline-flex;
+  align-items: center;
 }
 
 .order-content {
@@ -487,6 +732,30 @@ onMounted(() => {
 .action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.review-btn {
+  animation: pulse 2s infinite;
+}
+
+.review-btn-large {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 90, 95, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 90, 95, 0);
+  }
+}
+
+.review-hint {
+  font-size: 0.8rem;
+  color: #999;
+  text-align: right;
 }
 
 .order-footer {
