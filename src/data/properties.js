@@ -205,56 +205,121 @@ export const reviews = [
   {
     id: 1,
     propertyId: 1,
-    user: {
-      name: '刘先生',
-      avatar: 'https://picsum.photos/id/1001/100/100'
+    orderId: 0,
+    userId: 1,
+    userName: '刘先生',
+    userAvatar: 'https://picsum.photos/id/1001/100/100',
+    ratings: {
+      overall: 5,
+      location: 5,
+      cleanliness: 5,
+      service: 5,
+      facilities: 5,
+      value: 5
     },
-    rating: 5,
-    comment: '非常满意的住宿体验！房间干净整洁，设施齐全，交通便利。房东热情周到，强烈推荐！',
+    content: '非常满意的住宿体验！房间干净整洁，设施齐全，交通便利。房东热情周到，强烈推荐！',
+    images: [],
+    likes: {
+      count: 3,
+      users: [2, 3, 4]
+    },
+    createdAt: '2024-01-15T10:00:00.000Z',
     date: '2024-01-15'
   },
   {
     id: 2,
     propertyId: 1,
-    user: {
-      name: '王女士',
-      avatar: 'https://picsum.photos/id/1002/100/100'
+    orderId: 0,
+    userId: 2,
+    userName: '王女士',
+    userAvatar: 'https://picsum.photos/id/1002/100/100',
+    ratings: {
+      overall: 4,
+      location: 5,
+      cleanliness: 4,
+      service: 4,
+      facilities: 4,
+      value: 3
     },
-    rating: 4,
-    comment: '房间不错，地理位置很好，就是隔音稍微差了一些。整体满意，下次还会选择。',
+    content: '房间不错，地理位置很好，就是隔音稍微差了一些。整体满意，下次还会选择。',
+    images: [],
+    likes: {
+      count: 1,
+      users: [1]
+    },
+    createdAt: '2024-01-10T12:00:00.000Z',
     date: '2024-01-10'
   },
   {
     id: 3,
     propertyId: 2,
-    user: {
-      name: '张先生',
-      avatar: 'https://picsum.photos/id/1003/100/100'
+    orderId: 0,
+    userId: 3,
+    userName: '张先生',
+    userAvatar: 'https://picsum.photos/id/1003/100/100',
+    ratings: {
+      overall: 5,
+      location: 4,
+      cleanliness: 5,
+      service: 5,
+      facilities: 5,
+      value: 5
     },
-    rating: 5,
-    comment: '古典风格很有特色，家具都很精致。房东提供的茶室很棒，非常享受！',
+    content: '古典风格很有特色，家具都很精致。房东提供的茶室很棒，非常享受！',
+    images: [],
+    likes: {
+      count: 0,
+      users: []
+    },
+    createdAt: '2024-01-08T10:00:00.000Z',
     date: '2024-01-08'
   },
   {
     id: 4,
     propertyId: 3,
-    user: {
-      name: '李女士',
-      avatar: 'https://picsum.photos/id/1004/100/100'
+    orderId: 0,
+    userId: 4,
+    userName: '李女士',
+    userAvatar: 'https://picsum.photos/id/1004/100/100',
+    ratings: {
+      overall: 5,
+      location: 4,
+      cleanliness: 5,
+      service: 5,
+      facilities: 5,
+      value: 5
     },
-    rating: 5,
-    comment: '日式风格太棒了！榻榻米很舒适，早餐也很美味。是一次难忘的住宿体验。',
+    content: '日式风格太棒了！榻榻米很舒适，早餐也很美味。是一次难忘的住宿体验。',
+    images: [],
+    likes: {
+      count: 2,
+      users: [1, 2]
+    },
+    createdAt: '2024-01-05T10:00:00.000Z',
     date: '2024-01-05'
   },
   {
     id: 5,
     propertyId: 4,
-    user: {
-      name: '赵先生',
-      avatar: 'https://picsum.photos/id/1005/100/100'
+    orderId: 0,
+    userId: 5,
+    userName: '赵先生',
+    userAvatar: 'https://picsum.photos/id/1005/100/100',
+    ratings: {
+      overall: 4,
+      location: 5,
+      cleanliness: 4,
+      service: 4,
+      facilities: 4,
+      value: 3
     },
-    rating: 4,
-    comment: '海景非常美，早晨在阳台上看日出是一种享受。设施都很新，居住舒适。',
+    content: '海景非常美，早晨在阳台上看日出是一种享受。设施都很新，居住舒适。',
+    images: [],
+    likes: {
+      count: 0,
+      users: []
+    },
+    createdAt: '2024-01-02T10:00:00.000Z',
     date: '2024-01-02'
   }
 ];
