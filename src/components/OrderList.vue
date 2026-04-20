@@ -376,11 +376,6 @@ const openReviewForm = (order) => {
 }
 
 const onReviewSuccess = () => {
-  ElMessage({
-    message: '评价发表成功！',
-    type: 'success',
-    duration: 2000
-  })
   loadOrders()
 }
 
