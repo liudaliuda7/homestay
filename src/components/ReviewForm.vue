@@ -1,6 +1,7 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
+    @update:model-value="handleDialogUpdate"
     title="发表评价"
     width="600px"
     :close-on-click-modal="false"
@@ -293,6 +294,10 @@ const handleClose = () => {
   }
   
   emit('update:visible', false)
+}
+
+const handleDialogUpdate = (val) => {
+  emit('update:visible', val)
 }
 </script>
 
