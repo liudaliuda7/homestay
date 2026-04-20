@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'homestay_reviews';
+const LIKES_STORAGE_KEY = 'homestay_review_likes';
 const EXPIRE_DAYS = 7;
 const REVIEW_EXPIRE_DAYS = 10;
 
@@ -36,7 +37,34 @@ const getReviewsData = () => {
   }
 };
 
-const getReviews = () => {
+const getLikesData = () => {
+  const data = localStorage.getItem(LIKES_STORAGE_KEY);
+  if (!data) return null;
+  
+  try {
+    const parsed = JSON.parse(data);
+    const now = new Date().getTime();
+    
+    if (parsed.expireTime && now > parsed.expireTime) {
+      localStorage.removeItem(LIKES_STORAGE_KEY);
+      return null;
+    }
+    
+    return parsed;
+  } catch (e) {
+    return null;
+  }
+};
+
+const saveLikesData = (likesData) => {
+  const data = {
+    items: likesData,
+    expireTime: getExpireTime()
+  };
+  localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(data));
+};
+
+const getAllReviews = () => {
   const data = getReviewsData();
   const storageReviews = data && data.items ? data.items : [];
   
@@ -53,6 +81,30 @@ const getReviews = () => {
   return [...staticReviews, ...filteredStorageReviews];
 };
 
+const mergeLikesWithReviews = (reviews) => {
+  const likesData = getLikesData();
+  const likesMap = likesData && likesData.items ? likesData.items : {};
+  
+  return reviews.map(review => {
+    const reviewLikes = likesMap[review.id];
+    if (reviewLikes) {
+      return {
+        ...review,
+        likes: {
+          count: reviewLikes.count,
+          users: [...reviewLikes.users]
+        }
+      };
+    }
+    return review;
+  });
+};
+
+const getReviews = () => {
+  const allReviews = getAllReviews();
+  return mergeLikesWithReviews(allReviews);
+};
+
 const saveReviews = (reviews) => {
   const staticIds = new Set(staticReviews.map(r => r.id));
   const storageReviews = reviews.filter(r => !staticIds.has(r.id));
@@ -64,13 +116,25 @@ const saveReviews = (reviews) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
+const updateReviewLikes = (reviewId, likes) => {
+  const likesData = getLikesData();
+  const likesMap = likesData && likesData.items ? { ...likesData.items } : {};
+  
+  likesMap[reviewId] = {
+    count: likes.count,
+    users: [...likes.users]
+  };
+  
+  saveLikesData(likesMap);
+};
+
 export const getNextReviewId = () => {
-  const reviews = getReviews();
+  const reviews = getAllReviews();
   return reviews.length > 0 ? Math.max(...reviews.map(r => r.id)) + 1 : 1;
 };
 
 export const createReview = (reviewData) => {
-  const reviews = getReviews();
+  const reviews = getAllReviews();
   
   const now = new Date();
   
@@ -146,25 +210,40 @@ export const toggleLike = (reviewId, userId) => {
   }
   
   const review = reviews[reviewIndex];
+  
+  if (!review.likes) {
+    review.likes = { count: 0, users: [] };
+  }
+  
   const userIndex = review.likes.users.indexOf(userId);
+  let isLiked;
   
   if (userIndex === -1) {
     review.likes.users.push(userId);
     review.likes.count++;
+    isLiked = true;
   } else {
     review.likes.users.splice(userIndex, 1);
     review.likes.count--;
+    isLiked = false;
   }
   
   review.updatedAt = new Date().toISOString();
+  
+  updateReviewLikes(reviewId, review.likes);
+  
   reviews[reviewIndex] = review;
-  saveReviews(reviews);
+  
+  const staticIds = new Set(staticReviews.map(r => r.id));
+  if (!staticIds.has(reviewId)) {
+    saveReviews(reviews);
+  }
   
   return {
     success: true,
-    message: userIndex === -1 ? '点赞成功' : '取消点赞成功',
+    message: isLiked ? '点赞成功' : '取消点赞成功',
     review: review,
-    isLiked: userIndex === -1
+    isLiked: isLiked
   };
 };
 
@@ -243,64 +322,4 @@ export const getPropertyRatingSummary = (propertyId) => {
   summary.value = Math.round((summary.value / count) * 10) / 10;
   
   return summary;
-};
-
-export const initSampleReviews = () => {
-  const data = getReviewsData();
-  if (data && data.items && data.items.length > 0) return;
-  
-  const sampleReviews = [
-    {
-      id: 1,
-      propertyId: 1,
-      orderId: 1,
-      userId: 1,
-      userName: '刘先生',
-      userAvatar: 'https://picsum.photos/id/1001/100/100',
-      ratings: {
-        overall: 4.8,
-        location: 5,
-        cleanliness: 5,
-        service: 5,
-        facilities: 4,
-        value: 5
-      },
-      content: '非常满意的住宿体验！房间干净整洁，设施齐全，交通便利。房东热情周到，强烈推荐！',
-      images: [],
-      hostReply: null,
-      likes: {
-        count: 3,
-        users: [2, 3, 4]
-      },
-      createdAt: '2024-01-15T10:00:00.000Z',
-      updatedAt: '2024-01-15T10:00:00.000Z'
-    },
-    {
-      id: 2,
-      propertyId: 1,
-      orderId: 2,
-      userId: 2,
-      userName: '王女士',
-      userAvatar: 'https://picsum.photos/id/1002/100/100',
-      ratings: {
-        overall: 4.0,
-        location: 5,
-        cleanliness: 4,
-        service: 4,
-        facilities: 4,
-        value: 3
-      },
-      content: '房间不错，地理位置很好，就是隔音稍微差了一些。整体满意，下次还会选择。',
-      images: [],
-      hostReply: null,
-      likes: {
-        count: 1,
-        users: [1]
-      },
-      createdAt: '2024-01-10T12:00:00.000Z',
-      updatedAt: '2024-01-10T12:00:00.000Z'
-    }
-  ];
-  
-  saveReviews(sampleReviews);
 };
