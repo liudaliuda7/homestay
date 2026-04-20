@@ -5,18 +5,31 @@
         <h1>民宿之家</h1>
       </router-link>
       
-      <div class="search-container">
+      <div class="search-container" ref="searchContainerRef">
         <CityCascader />
         <input 
           type="text" 
           placeholder="搜索区域或房源名称..." 
-          v-model="searchKeyword"
-          @input="handleSearch"
+          :model-value="searchKeyword"
+          @input="handleInput"
+          @focus="handleFocus"
           class="search-input"
+          ref="searchInputRef"
         />
-        <button class="search-btn">
+        <button class="search-btn" @click="handleSearchClick">
           <span class="search-icon">🔍</span>
         </button>
+        
+        <Transition name="dropdown">
+          <SearchDropdown 
+            v-if="showDropdown"
+            :visible="showDropdown"
+            :search-keyword="searchKeyword"
+            @select="handleDropdownSelect"
+            @close="handleDropdownClose"
+            @update:search-keyword="handleKeywordUpdate"
+          />
+        </Transition>
       </div>
       
       <div class="nav-menu">
@@ -111,51 +124,110 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import CityCascader from './CityCascader.vue'
-import { getCurrentUser, logoutUser } from '../data/user'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import CityCascader from './CityCascader.vue';
+import SearchDropdown from './SearchDropdown.vue';
+import { getCurrentUser, logoutUser } from '../data/user';
+import { addToSearchHistory } from '../data/search';
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
 
-const searchKeyword = ref('')
-const mobileMenuOpen = ref(false)
-const userDropdownOpen = ref(false)
-const currentUser = ref(null)
+const searchKeyword = ref('');
+const showDropdown = ref(false);
+const mobileMenuOpen = ref(false);
+const userDropdownOpen = ref(false);
+const currentUser = ref(null);
+const searchContainerRef = ref(null);
+const searchInputRef = ref(null);
 
 const checkUserStatus = () => {
-  currentUser.value = getCurrentUser()
-}
+  currentUser.value = getCurrentUser();
+};
 
 watch(
   () => route.path,
   () => {
-    checkUserStatus()
+    checkUserStatus();
   }
-)
+);
+
+watch(
+  () => route.query.keyword,
+  (newKeyword) => {
+    if (newKeyword) {
+      searchKeyword.value = newKeyword;
+    }
+  },
+  { immediate: true }
+);
 
 const toggleMobileMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-}
+  mobileMenuOpen.value = !mobileMenuOpen.value;
+};
+
+const handleInput = (event) => {
+  searchKeyword.value = event.target.value;
+};
+
+const handleFocus = () => {
+  showDropdown.value = true;
+};
 
 const handleSearch = () => {
-  router.push({ path: '/', query: { keyword: searchKeyword.value } })
-}
+  if (searchKeyword.value && searchKeyword.value.trim() !== '') {
+    addToSearchHistory(searchKeyword.value.trim());
+  }
+  showDropdown.value = false;
+  router.push({ path: '/', query: { keyword: searchKeyword.value || undefined } });
+};
+
+const handleSearchClick = () => {
+  handleSearch();
+};
+
+const handleDropdownSelect = (keyword) => {
+  searchKeyword.value = keyword;
+  handleSearch();
+};
+
+const handleDropdownClose = () => {
+  showDropdown.value = false;
+  searchInputRef.value?.blur();
+};
+
+const handleKeywordUpdate = (keyword) => {
+  searchKeyword.value = keyword;
+  if (searchInputRef.value) {
+    searchInputRef.value.value = keyword;
+  }
+};
+
+const handleClickOutside = (event) => {
+  if (searchContainerRef.value && !searchContainerRef.value.contains(event.target)) {
+    showDropdown.value = false;
+  }
+};
 
 const handleLogout = () => {
-  logoutUser()
-  currentUser.value = null
-  userDropdownOpen.value = false
-  mobileMenuOpen.value = false
-  ElMessage.success('已退出登录')
-  router.push('/')
-}
+  logoutUser();
+  currentUser.value = null;
+  userDropdownOpen.value = false;
+  mobileMenuOpen.value = false;
+  ElMessage.success('已退出登录');
+  router.push('/');
+};
 
 onMounted(() => {
-  checkUserStatus()
-})
+  checkUserStatus();
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style scoped>
@@ -197,6 +269,13 @@ onMounted(() => {
   border-radius: 24px;
   overflow: visible;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.search-container:focus-within {
+  border-color: #ff5a5f;
+  box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .search-input {
@@ -206,6 +285,7 @@ onMounted(() => {
   border-left: 1px solid #e0e0e0;
   outline: none;
   font-size: 0.9rem;
+  background: transparent;
 }
 
 .search-btn {
@@ -215,6 +295,8 @@ onMounted(() => {
   padding: 0.75rem 1.5rem;
   cursor: pointer;
   transition: background-color 0.3s;
+  border-top-right-radius: 24px;
+  border-bottom-right-radius: 24px;
 }
 
 .search-btn:hover {
