@@ -16,6 +16,13 @@
           class="search-input"
           ref="searchInputRef"
         />
+        <button 
+          class="clear-btn-wrapper"
+          v-if="searchKeyword && searchKeyword.trim() !== ''"
+          @click="handleClearSearch"
+        >
+          <span class="clear-icon">✕</span>
+        </button>
         <button class="search-btn" @click="handleSearchClick">
           <span class="search-icon">🔍</span>
         </button>
@@ -28,6 +35,7 @@
             @select="handleDropdownSelect"
             @close="handleDropdownClose"
             @update:search-keyword="handleKeywordUpdate"
+            @loadingChange="handleLoadingChange"
           />
         </Transition>
       </div>
@@ -142,6 +150,7 @@ const userDropdownOpen = ref(false);
 const currentUser = ref(null);
 const searchContainerRef = ref(null);
 const searchInputRef = ref(null);
+const isSearching = ref(false);
 
 const checkUserStatus = () => {
   currentUser.value = getCurrentUser();
@@ -186,6 +195,19 @@ const handleSearch = () => {
 
 const handleSearchClick = () => {
   handleSearch();
+};
+
+const handleClearSearch = () => {
+  searchKeyword.value = '';
+  if (searchInputRef.value) {
+    searchInputRef.value.value = '';
+  }
+  router.push({ path: '/', query: {} });
+  showDropdown.value = false;
+};
+
+const handleLoadingChange = (isLoading) => {
+  isSearching.value = isLoading;
 };
 
 const handleDropdownSelect = (keyword) => {
@@ -286,6 +308,33 @@ onUnmounted(() => {
   outline: none;
   font-size: 0.9rem;
   background: transparent;
+}
+
+.clear-btn-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 100%;
+  padding: 0 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-btn-wrapper:hover {
+  background-color: #f5f5f5;
+}
+
+.clear-icon {
+  font-size: 0.75rem;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.clear-btn-wrapper:hover .clear-icon {
+  color: #ff5a5f;
 }
 
 .search-btn {

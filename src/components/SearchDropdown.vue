@@ -4,7 +4,12 @@
     class="search-dropdown"
     ref="dropdownRef"
   >
-    <TransitionGroup name="list" tag="div" class="suggestions-list" v-if="suggestions.length > 0">
+    <div class="loading-container" v-if="isLoading">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">搜索中...</span>
+    </div>
+
+    <TransitionGroup name="list" tag="div" class="suggestions-list" v-else-if="suggestions.length > 0">
       <div
         v-for="(suggestion, index) in suggestions"
         :key="suggestion.keyword + '-' + index"
@@ -26,7 +31,37 @@
       </div>
     </TransitionGroup>
 
-    <div class="history-section" v-else-if="searchHistory.length > 0 && !hasInput">
+    <div v-else-if="hasInput" class="empty-result-section">
+      <div class="empty-result">
+        <span class="empty-result-icon">🔍</span>
+        <span class="empty-result-text">未找到相关房源</span>
+      </div>
+      
+      <div class="hot-section" v-if="hotSearches.length > 0">
+        <div class="section-header">
+          <span class="section-title">🔥 热门搜索</span>
+        </div>
+        <div class="tags-list">
+          <div
+            v-for="(item, index) in hotSearches"
+            :key="item.keyword + '-' + index"
+            class="hot-tag"
+            :class="{ 
+              active: selectedIndex === index,
+              'top-three': index < 3
+            }"
+            @click="handleHotClick(item.keyword)"
+            @mouseenter="selectedIndex = index"
+          >
+            <span class="hot-rank" v-if="index < 3">{{ index + 1 }}</span>
+            <span class="hot-text">{{ item.keyword }}</span>
+            <span class="hot-count">{{ item.count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="history-section" v-else-if="searchHistory.length > 0">
       <div class="section-header">
         <span class="section-title">搜索历史</span>
         <button class="clear-btn" @click="handleClearHistory">
@@ -39,9 +74,9 @@
           v-for="(item, index) in searchHistory"
           :key="item.keyword + '-' + index"
           class="history-tag"
-          :class="{ active: selectedIndex === index && !hasInput }"
+          :class="{ active: selectedIndex === index }"
           @click="handleHistoryClick(item.keyword)"
-          @mouseenter="!hasInput && (selectedIndex = index)"
+          @mouseenter="selectedIndex = index"
         >
           <span class="history-icon">🕐</span>
           <span class="history-text">{{ item.keyword }}</span>
@@ -55,7 +90,7 @@
       </div>
     </div>
 
-    <div class="hot-section" v-else-if="hotSearches.length > 0 && !hasInput">
+    <div class="hot-section" v-else-if="hotSearches.length > 0">
       <div class="section-header">
         <span class="section-title">🔥 热门搜索</span>
       </div>
@@ -65,11 +100,11 @@
           :key="item.keyword + '-' + index"
           class="hot-tag"
           :class="{ 
-            active: selectedIndex === index + searchHistory.length && !hasInput && searchHistory.length === 0,
+            active: selectedIndex === index,
             'top-three': index < 3
           }"
           @click="handleHotClick(item.keyword)"
-          @mouseenter="!hasInput && searchHistory.length === 0 && (selectedIndex = index)"
+          @mouseenter="selectedIndex = index"
         >
           <span class="hot-rank" v-if="index < 3">{{ index + 1 }}</span>
           <span class="hot-text">{{ item.keyword }}</span>
@@ -78,7 +113,7 @@
       </div>
     </div>
 
-    <div class="empty-state" v-else-if="!hasInput && searchHistory.length === 0 && hotSearches.length === 0">
+    <div class="empty-state" v-else>
       <span class="empty-icon">🔍</span>
       <span class="empty-text">开始搜索吧</span>
     </div>
@@ -110,13 +145,14 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['select', 'update:searchKeyword']);
+const emit = defineEmits(['select', 'update:searchKeyword', 'loadingChange']);
 
 const dropdownRef = ref(null);
 const searchHistory = ref([]);
 const hotSearches = ref([]);
 const suggestions = ref([]);
 const selectedIndex = ref(-1);
+const isLoading = ref(false);
 
 const hasInput = computed(() => props.searchKeyword && props.searchKeyword.trim() !== '');
 
@@ -125,21 +161,33 @@ const loadData = () => {
   hotSearches.value = getHotSearches();
 };
 
-const debouncedGetSuggestions = debounce((keyword) => {
+const fetchSuggestions = (keyword) => {
   if (!keyword || keyword.trim() === '') {
     suggestions.value = [];
     selectedIndex.value = -1;
+    isLoading.value = false;
+    emit('loadingChange', false);
     return;
   }
   
+  isLoading.value = true;
+  emit('loadingChange', true);
+  
   suggestions.value = getSuggestions(keyword.trim(), properties);
-  selectedIndex.value = suggestions.value.length > 0 ? 0 : -1;
+  selectedIndex.value = suggestions.value.length > 0 ? 0 : 0;
+  
+  isLoading.value = false;
+  emit('loadingChange', false);
+};
+
+const debouncedFetchSuggestions = debounce((keyword) => {
+  fetchSuggestions(keyword);
 }, 300);
 
 watch(
   () => props.searchKeyword,
   (newKeyword) => {
-    debouncedGetSuggestions(newKeyword);
+    debouncedFetchSuggestions(newKeyword);
   }
 );
 
@@ -204,7 +252,26 @@ const handleClearHistory = () => {
 const handleKeyDown = (event) => {
   if (!props.visible) return;
   
-  const items = hasInput.value ? suggestions.value : (searchHistory.value.length > 0 ? searchHistory.value : hotSearches.value);
+  let items = [];
+  
+  if (isLoading.value) {
+    return;
+  }
+  
+  if (hasInput.value) {
+    if (suggestions.value.length > 0) {
+      items = suggestions.value;
+    } else if (hotSearches.value.length > 0) {
+      items = hotSearches.value;
+    }
+  } else {
+    if (searchHistory.value.length > 0) {
+      items = searchHistory.value;
+    } else if (hotSearches.value.length > 0) {
+      items = hotSearches.value;
+    }
+  }
+  
   const maxIndex = items.length - 1;
   
   switch (event.key) {
@@ -231,7 +298,7 @@ const handleKeyDown = (event) => {
     case 'Enter':
       event.preventDefault();
       if (selectedIndex.value >= 0 && selectedIndex.value <= maxIndex) {
-        if (hasInput.value && suggestions.value[selectedIndex.value]) {
+        if (hasInput.value && suggestions.value.length > 0 && suggestions.value[selectedIndex.value]) {
           handleSuggestionClick(suggestions.value[selectedIndex.value]);
         } else if (searchHistory.value.length > 0 && searchHistory.value[selectedIndex.value]) {
           handleHistoryClick(searchHistory.value[selectedIndex.value].keyword);
@@ -279,6 +346,33 @@ defineExpose({
   overflow-y: auto;
   z-index: 1000;
   padding: 12px 0;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 20px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f0f0f0;
+  border-top: 2px solid #ff5a5f;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 0.9rem;
+  color: #666;
 }
 
 .suggestions-list {
@@ -330,6 +424,29 @@ defineExpose({
 .highlight {
   color: #ff5a5f;
   font-weight: 600;
+}
+
+.empty-result-section {
+  padding: 8px 0;
+}
+
+.empty-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  gap: 8px;
+}
+
+.empty-result-icon {
+  font-size: 1.5rem;
+  opacity: 0.5;
+}
+
+.empty-result-text {
+  font-size: 0.85rem;
+  color: #999;
 }
 
 .section-header {
