@@ -178,7 +178,8 @@ import { addToSearchHistory } from '../data/search';
 import { 
   getUnreadCount, 
   seedSampleNotifications, 
-  checkAndSendCheckInReminders 
+  checkAndSendCheckInReminders,
+  NOTIFICATION_EVENT
 } from '../data/notifications';
 
 const router = useRouter();
@@ -195,11 +196,17 @@ const notificationContainerRef = ref(null);
 const isSearching = ref(false);
 const showNotificationDropdown = ref(false);
 const previousUnreadCount = ref(0);
+const notificationUpdateCount = ref(0);
 
 const unreadCount = computed(() => {
+  notificationUpdateCount.value;
   if (!currentUser.value) return 0;
   return getUnreadCount(currentUser.value.id);
 });
+
+const handleNotificationUpdate = () => {
+  notificationUpdateCount.value++;
+};
 
 const hasNewNotification = computed(() => {
   return unreadCount.value > previousUnreadCount.value;
@@ -331,10 +338,18 @@ onMounted(() => {
   checkUserStatus();
   document.addEventListener('click', handleClickOutside);
   previousUnreadCount.value = currentUser.value ? getUnreadCount(currentUser.value.id) : 0;
+  
+  if (typeof window !== 'undefined') {
+    window.addEventListener(NOTIFICATION_EVENT, handleNotificationUpdate);
+  }
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+  
+  if (typeof window !== 'undefined') {
+    window.removeEventListener(NOTIFICATION_EVENT, handleNotificationUpdate);
+  }
 });
 </script>
 

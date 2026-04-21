@@ -37,12 +37,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getCurrentUser, updateUserInfo } from '../data/user'
 import { getFavoriteCount } from '../data/favorites'
-import { getUnreadCount } from '../data/notifications'
+import { getUnreadCount, NOTIFICATION_EVENT } from '../data/notifications'
 
 const route = useRoute()
 const router = useRouter()
@@ -55,9 +55,12 @@ const userInfo = ref({
   phone: ''
 })
 
+const notificationUpdateCount = ref(0)
+
 const menuItems = computed(() => {
   const user = getCurrentUser()
   const unreadCount = user ? getUnreadCount(user.id) : 0
+  notificationUpdateCount.value
   
   return [
     { id: 'profile', name: '个人信息', icon: '👤', path: '/user/profile' },
@@ -68,6 +71,10 @@ const menuItems = computed(() => {
     { id: 'help', name: '帮助中心', icon: '❓', path: '/user/help' }
   ]
 })
+
+const handleNotificationUpdate = () => {
+  notificationUpdateCount.value++
+}
 
 const isActiveMenu = (menuId) => {
   const pathMap = {
@@ -94,6 +101,16 @@ onMounted(() => {
   }
   
   userInfo.value = { ...user }
+  
+  if (typeof window !== 'undefined') {
+    window.addEventListener(NOTIFICATION_EVENT, handleNotificationUpdate)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener(NOTIFICATION_EVENT, handleNotificationUpdate)
+  }
 })
 </script>
 
