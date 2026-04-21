@@ -450,8 +450,9 @@ onUnmounted(() => {
 
 .card-indicator {
   position: absolute;
-  top: 1.25rem;
+  top: 50%;
   right: 1.25rem;
+  transform: translateY(-50%);
   width: 8px;
   height: 8px;
   border-radius: 50%;
