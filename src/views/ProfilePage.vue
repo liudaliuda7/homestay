@@ -42,6 +42,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getCurrentUser, updateUserInfo } from '../data/user'
 import { getFavoriteCount } from '../data/favorites'
+import { getUnreadCount } from '../data/notifications'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,19 +55,26 @@ const userInfo = ref({
   phone: ''
 })
 
-const menuItems = computed(() => [
-  { id: 'profile', name: '个人信息', icon: '👤', path: '/user/profile' },
-  { id: 'order', name: '我的订单', icon: '📋', path: '/user/order', badge: 0 },
-  { id: 'favorites', name: '我的收藏', icon: '❤️', path: '/user/favorites', badge: getFavoriteCount() },
-  { id: 'security', name: '账户安全', icon: '🔐', path: '/user/security' },
-  { id: 'help', name: '帮助中心', icon: '❓', path: '/user/help' }
-])
+const menuItems = computed(() => {
+  const user = getCurrentUser()
+  const unreadCount = user ? getUnreadCount(user.id) : 0
+  
+  return [
+    { id: 'profile', name: '个人信息', icon: '👤', path: '/user/profile' },
+    { id: 'order', name: '我的订单', icon: '📋', path: '/user/order', badge: 0 },
+    { id: 'favorites', name: '我的收藏', icon: '❤️', path: '/user/favorites', badge: getFavoriteCount() },
+    { id: 'notifications', name: '消息中心', icon: '🔔', path: '/user/notifications', badge: unreadCount },
+    { id: 'security', name: '账户安全', icon: '🔐', path: '/user/security' },
+    { id: 'help', name: '帮助中心', icon: '❓', path: '/user/help' }
+  ]
+})
 
 const isActiveMenu = (menuId) => {
   const pathMap = {
     'profile': '/user/profile',
     'order': '/user/order',
     'favorites': '/user/favorites',
+    'notifications': '/user/notifications',
     'security': '/user/security',
     'help': '/user/help'
   }

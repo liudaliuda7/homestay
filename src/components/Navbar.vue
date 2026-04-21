@@ -48,6 +48,30 @@
         
         <div 
           v-if="currentUser" 
+          class="notification-menu"
+          @click="handleNotificationToggle"
+          @mouseenter="handleNotificationHover"
+          ref="notificationContainerRef"
+        >
+          <button class="notification-btn" :class="{ shake: hasNewNotification }">
+            <span class="notification-icon">🔔</span>
+            <span v-if="unreadCount > 0" class="notification-badge">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </span>
+          </button>
+          
+          <Transition name="dropdown">
+            <div v-if="showNotificationDropdown" class="notification-dropdown-wrapper">
+              <NotificationDropdown 
+                :visible="showNotificationDropdown"
+                @close="handleNotificationClose"
+              />
+            </div>
+          </Transition>
+        </div>
+        
+        <div 
+          v-if="currentUser" 
           class="user-menu"
           @mouseenter="userDropdownOpen = true"
           @mouseleave="userDropdownOpen = false"
@@ -74,6 +98,11 @@
               <router-link to="/user/profile" class="dropdown-item" @click="userDropdownOpen = false">
                 <span class="dropdown-icon">👤</span>
                 <span>个人中心</span>
+              </router-link>
+              
+              <router-link to="/user/notifications" class="dropdown-item" @click="userDropdownOpen = false">
+                <span class="dropdown-icon">🔔</span>
+                <span>消息中心</span>
               </router-link>
               
               <router-link to="/user/order" class="dropdown-item" @click="userDropdownOpen = false">
@@ -119,7 +148,13 @@
           <img :src="currentUser.avatar" :alt="currentUser.username" class="mobile-avatar" />
           <span class="mobile-username">{{ currentUser.username }}</span>
         </div>
-        <router-link to="/profile" class="mobile-nav-item" @click="toggleMobileMenu">个人中心</router-link>
+        <router-link to="/user/profile" class="mobile-nav-item" @click="toggleMobileMenu">个人中心</router-link>
+        <router-link to="/user/notifications" class="mobile-nav-item" @click="toggleMobileMenu">
+          消息中心
+          <span v-if="unreadCount > 0" class="mobile-notification-badge">{{ unreadCount }}</span>
+        </router-link>
+        <router-link to="/user/order" class="mobile-nav-item" @click="toggleMobileMenu">我的订单</router-link>
+        <router-link to="/user/favorites" class="mobile-nav-item" @click="toggleMobileMenu">我的收藏</router-link>
         <button class="mobile-nav-item mobile-logout" @click="handleLogout">退出登录</button>
       </div>
       
@@ -137,8 +172,14 @@ import { useRouter, useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import CityCascader from './CityCascader.vue';
 import SearchDropdown from './SearchDropdown.vue';
+import NotificationDropdown from './NotificationDropdown.vue';
 import { getCurrentUser, logoutUser } from '../data/user';
 import { addToSearchHistory } from '../data/search';
+import { 
+  getUnreadCount, 
+  seedSampleNotifications, 
+  checkAndSendCheckInReminders 
+} from '../data/notifications';
 
 const router = useRouter();
 const route = useRoute();
@@ -150,16 +191,44 @@ const userDropdownOpen = ref(false);
 const currentUser = ref(null);
 const searchContainerRef = ref(null);
 const searchInputRef = ref(null);
+const notificationContainerRef = ref(null);
 const isSearching = ref(false);
+const showNotificationDropdown = ref(false);
+const previousUnreadCount = ref(0);
+
+const unreadCount = computed(() => {
+  if (!currentUser.value) return 0;
+  return getUnreadCount(currentUser.value.id);
+});
+
+const hasNewNotification = computed(() => {
+  return unreadCount.value > previousUnreadCount.value;
+});
 
 const checkUserStatus = () => {
   currentUser.value = getCurrentUser();
+  if (currentUser.value) {
+    seedSampleNotifications(currentUser.value.id);
+    checkAndSendCheckInReminders(currentUser.value.id);
+  }
 };
+
+watch(
+  () => unreadCount.value,
+  (newCount, oldCount) => {
+    if (newCount > oldCount) {
+      setTimeout(() => {
+        previousUnreadCount.value = newCount;
+      }, 1000);
+    }
+  }
+);
 
 watch(
   () => route.path,
   () => {
     checkUserStatus();
+    previousUnreadCount.value = currentUser.value ? getUnreadCount(currentUser.value.id) : 0;
   }
 );
 
@@ -231,6 +300,21 @@ const handleClickOutside = (event) => {
   if (searchContainerRef.value && !searchContainerRef.value.contains(event.target)) {
     showDropdown.value = false;
   }
+  if (notificationContainerRef.value && !notificationContainerRef.value.contains(event.target)) {
+    showNotificationDropdown.value = false;
+  }
+};
+
+const handleNotificationToggle = () => {
+  showNotificationDropdown.value = !showNotificationDropdown.value;
+};
+
+const handleNotificationHover = () => {
+  previousUnreadCount.value = currentUser.value ? getUnreadCount(currentUser.value.id) : 0;
+};
+
+const handleNotificationClose = () => {
+  showNotificationDropdown.value = false;
 };
 
 const handleLogout = () => {
@@ -238,6 +322,7 @@ const handleLogout = () => {
   currentUser.value = null;
   userDropdownOpen.value = false;
   mobileMenuOpen.value = false;
+  showNotificationDropdown.value = false;
   ElMessage.success('已退出登录');
   router.push('/');
 };
@@ -245,6 +330,7 @@ const handleLogout = () => {
 onMounted(() => {
   checkUserStatus();
   document.addEventListener('click', handleClickOutside);
+  previousUnreadCount.value = currentUser.value ? getUnreadCount(currentUser.value.id) : 0;
 });
 
 onUnmounted(() => {
@@ -372,6 +458,68 @@ onUnmounted(() => {
 
 .nav-item:hover {
   color: #ff5a5f;
+}
+
+.notification-menu {
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.notification-btn {
+  position: relative;
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.notification-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.notification-icon {
+  font-size: 1.1rem;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #ff5a5f;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid white;
+}
+
+.notification-btn.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-2px); }
+  40%, 80% { transform: translateX(2px); }
+}
+
+.notification-dropdown-wrapper {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1001;
 }
 
 .auth-buttons {
@@ -566,10 +714,20 @@ onUnmounted(() => {
   color: #333;
   font-size: 0.9rem;
   border-bottom: 1px solid #f0f0f0;
+  position: relative;
 }
 
 .mobile-nav-item:last-child {
   border-bottom: none;
+}
+
+.mobile-notification-badge {
+  background: #ff5a5f;
+  color: white;
+  font-size: 0.65rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  margin-left: 0.5rem;
 }
 
 .mobile-user-section {

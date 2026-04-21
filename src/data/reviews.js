@@ -4,6 +4,11 @@ const EXPIRE_DAYS = 7;
 const REVIEW_EXPIRE_DAYS = 10;
 
 import { reviews as staticReviews } from './properties';
+import { 
+  createReviewNotification,
+  REVIEW_NOTIFICATION_SUBTYPES
+} from './notifications';
+import { properties } from './properties';
 
 export const RATING_DIMENSIONS = [
   { key: 'location', label: '位置', icon: '📍' },
@@ -222,6 +227,18 @@ export const toggleLike = (reviewId, userId) => {
     review.likes.users.push(userId);
     review.likes.count++;
     isLiked = true;
+    
+    if (review.userId !== userId) {
+      const property = properties.find(p => p.id === review.propertyId);
+      if (property) {
+        createReviewNotification(
+          review,
+          property,
+          REVIEW_NOTIFICATION_SUBTYPES.LIKE,
+          review.userId
+        );
+      }
+    }
   } else {
     review.likes.users.splice(userIndex, 1);
     review.likes.count--;

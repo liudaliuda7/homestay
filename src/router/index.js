@@ -7,6 +7,7 @@ import ProfilePage from '../views/ProfilePage.vue';
 import ProfileInfo from '../components/ProfileInfo.vue';
 import OrderList from '../components/OrderList.vue';
 import FavoritesList from '../components/FavoritesList.vue';
+import NotificationCenter from '../components/NotificationCenter.vue';
 import SecuritySettings from '../components/SecuritySettings.vue';
 import HelpCenter from '../components/HelpCenter.vue';
 import { getCurrentUser } from '../data/user';
@@ -65,6 +66,12 @@ const routes = [
         name: 'UserFavorites',
         component: FavoritesList,
         meta: { title: '我的收藏' }
+      },
+      {
+        path: 'notifications',
+        name: 'UserNotifications',
+        component: NotificationCenter,
+        meta: { title: '消息中心' }
       },
       {
         path: 'security',
