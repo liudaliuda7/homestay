@@ -114,10 +114,6 @@ const formatTime = (createdAt) => {
   return formatNotificationTime(createdAt);
 };
 
-const getNotificationIcon = (type) => {
-  return getNotificationIcon(type);
-};
-
 const handleNotificationClick = (notification) => {
   if (!notification.isRead) {
     markAsRead(notification.id);
