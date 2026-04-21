@@ -1,35 +1,37 @@
 <template>
   <div class="property-card card-hover">
-    <router-link :to="`/property/${property.id}`" class="card-link">
-      <div class="card-image">
-        <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
-        <div class="top-actions">
-          <button class="share-btn" @click.stop="handleShare">
-            <span class="share-icon">📤</span>
-          </button>
-          <div class="rating">
-            <span class="star">⭐</span>
-            <span>{{ property.rating }}</span>
-            <span>({{ property.reviews }})</span>
+    <div class="card-image-wrapper">
+      <router-link :to="`/property/${property.id}`" class="card-link">
+        <div class="card-image">
+          <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
+        </div>
+        <div class="card-content">
+          <div class="location">{{ property.location }}</div>
+          <h3 class="title">{{ property.title }}</h3>
+          <div class="info">
+            <span>{{ property.guests }}位房客</span>
+            <span>·</span>
+            <span>{{ property.bedroom }}间卧室</span>
+            <span>·</span>
+            <span>{{ property.bathroom }}间卫生间</span>
+          </div>
+          <div class="price">
+            <span class="price-value">¥{{ property.price }}</span>
+            <span class="price-unit">/晚</span>
           </div>
         </div>
-      </div>
-      <div class="card-content">
-        <div class="location">{{ property.location }}</div>
-        <h3 class="title">{{ property.title }}</h3>
-        <div class="info">
-          <span>{{ property.guests }}位房客</span>
-          <span>·</span>
-          <span>{{ property.bedroom }}间卧室</span>
-          <span>·</span>
-          <span>{{ property.bathroom }}间卫生间</span>
-        </div>
-        <div class="price">
-          <span class="price-value">¥{{ property.price }}</span>
-          <span class="price-unit">/晚</span>
+      </router-link>
+      <div class="top-actions">
+        <button class="share-btn" @click="handleShare">
+          <span class="share-icon">📤</span>
+        </button>
+        <div class="rating">
+          <span class="star">⭐</span>
+          <span>{{ property.rating }}</span>
+          <span>({{ property.reviews }})</span>
         </div>
       </div>
-    </router-link>
+    </div>
   </div>
   
   <SharePanel
@@ -90,6 +92,10 @@ const handleShare = () => {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
+.card-image-wrapper {
+  position: relative;
+}
+
 .card-link {
   display: block;
   text-decoration: none;
@@ -123,7 +129,7 @@ const handleShare = () => {
   right: 12px;
   display: flex;
   gap: 8px;
-  z-index: 1;
+  z-index: 10;
 }
 
 .share-btn {
