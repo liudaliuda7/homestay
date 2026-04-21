@@ -158,10 +158,6 @@ const loadNotifications = () => {
   notifications.value = getUserNotifications(currentUser.value.id, currentFilter.value);
 };
 
-const getNotificationIcon = (type) => {
-  return getNotificationIcon(type);
-};
-
 const formatTime = (createdAt) => {
   return formatNotificationTime(createdAt);
 };
