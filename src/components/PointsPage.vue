@@ -50,107 +50,117 @@
       </div>
     </div>
     
-    <div class="points-tasks">
-      <div class="section-header">
-        <span class="section-icon">🎯</span>
-        <span class="section-title">赚积分任务</span>
-      </div>
-      <div class="task-list">
-        <div class="task-item">
-          <div class="task-icon">📅</div>
-          <div class="task-info">
-            <div class="task-name">每日签到</div>
-            <div class="task-desc">连续签到可获得额外奖励</div>
-          </div>
-          <div class="task-reward">
-            <span class="reward-value">+10积分</span>
-            <span class="reward-bonus" v-if="signInStatus.consecutiveDays > 0">
-              额外+{{ Math.min(signInStatus.consecutiveDays * 2, 10) }}
-            </span>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="task-icon">💰</div>
-          <div class="task-info">
-            <div class="task-name">消费返积分</div>
-            <div class="task-desc">每消费1元获得1积分</div>
-          </div>
-          <div class="task-reward">
-            <span class="reward-value">无上限</span>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="task-icon">🔗</div>
-          <div class="task-info">
-            <div class="task-name">分享房源</div>
-            <div class="task-desc">分享房源到社交平台</div>
-          </div>
-          <div class="task-reward">
-            <span class="reward-value">+5积分/次</span>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="task-icon">💬</div>
-          <div class="task-info">
-            <div class="task-name">发表评价</div>
-            <div class="task-desc">完成订单后评价房源</div>
-          </div>
-          <div class="task-reward">
-            <span class="reward-value">+20积分/次</span>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="task-icon">👥</div>
-          <div class="task-info">
-            <div class="task-name">邀请好友</div>
-            <div class="task-desc">邀请好友注册并完成首单</div>
-          </div>
-          <div class="task-reward">
-            <span class="reward-value">+100积分/人</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="points-history">
-      <div class="section-header">
-        <span class="section-icon">📊</span>
-        <span class="section-title">积分明细</span>
-      </div>
-      
-      <div class="filter-tabs">
+    <div class="main-tabs-wrapper">
+      <div class="main-tabs">
         <button 
-          v-for="tab in filterTabs" 
+          v-for="tab in mainTabs" 
           :key="tab.value"
-          class="tab-btn"
-          :class="{ active: currentFilter === tab.value }"
-          @click="currentFilter = tab.value"
+          class="main-tab-btn"
+          :class="{ active: currentMainTab === tab.value }"
+          @click="currentMainTab = tab.value"
         >
-          {{ tab.label }}
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.label }}</span>
         </button>
       </div>
       
-      <div class="history-list" v-if="filteredHistory.length > 0">
-        <div v-for="record in filteredHistory" :key="record.id" class="history-item">
-          <div class="history-icon" :class="{ 'income': record.isIncome, 'expense': !record.isIncome }">
-            {{ getTypeIcon(record.type) }}
+      <div class="main-tab-content">
+        <transition name="fade" mode="out-in">
+          <div v-if="currentMainTab === 'tasks'" key="tasks" class="tasks-section">
+            <div class="task-list">
+              <div class="task-item">
+                <div class="task-icon">📅</div>
+                <div class="task-info">
+                  <div class="task-name">每日签到</div>
+                  <div class="task-desc">连续签到可获得额外奖励</div>
+                </div>
+                <div class="task-reward">
+                  <span class="reward-value">+10积分</span>
+                  <span class="reward-bonus" v-if="signInStatus.consecutiveDays > 0">
+                    额外+{{ Math.min(signInStatus.consecutiveDays * 2, 10) }}
+                  </span>
+                </div>
+              </div>
+              <div class="task-item">
+                <div class="task-icon">💰</div>
+                <div class="task-info">
+                  <div class="task-name">消费返积分</div>
+                  <div class="task-desc">每消费1元获得1积分</div>
+                </div>
+                <div class="task-reward">
+                  <span class="reward-value">无上限</span>
+                </div>
+              </div>
+              <div class="task-item">
+                <div class="task-icon">🔗</div>
+                <div class="task-info">
+                  <div class="task-name">分享房源</div>
+                  <div class="task-desc">分享房源到社交平台</div>
+                </div>
+                <div class="task-reward">
+                  <span class="reward-value">+5积分/次</span>
+                </div>
+              </div>
+              <div class="task-item">
+                <div class="task-icon">💬</div>
+                <div class="task-info">
+                  <div class="task-name">发表评价</div>
+                  <div class="task-desc">完成订单后评价房源</div>
+                </div>
+                <div class="task-reward">
+                  <span class="reward-value">+20积分/次</span>
+                </div>
+              </div>
+              <div class="task-item">
+                <div class="task-icon">👥</div>
+                <div class="task-info">
+                  <div class="task-name">邀请好友</div>
+                  <div class="task-desc">邀请好友注册并完成首单</div>
+                </div>
+                <div class="task-reward">
+                  <span class="reward-value">+100积分/人</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="history-info">
-            <div class="history-title">{{ getTypeLabel(record.type) }}</div>
-            <div class="history-desc">{{ record.description }}</div>
-            <div class="history-time">{{ formatTime(record.createdAt) }}</div>
+          
+          <div v-else-if="currentMainTab === 'history'" key="history" class="history-section">
+            <div class="sub-tabs">
+              <button 
+                v-for="tab in filterTabs" 
+                :key="tab.value"
+                class="sub-tab-btn"
+                :class="{ active: currentFilter === tab.value }"
+                @click="currentFilter = tab.value"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+            
+            <div class="history-list" v-if="filteredHistory.length > 0">
+              <div v-for="record in filteredHistory" :key="record.id" class="history-item">
+                <div class="history-icon" :class="{ 'income': record.isIncome, 'expense': !record.isIncome }">
+                  {{ getTypeIcon(record.type) }}
+                </div>
+                <div class="history-info">
+                  <div class="history-title">{{ getTypeLabel(record.type) }}</div>
+                  <div class="history-desc">{{ record.description }}</div>
+                  <div class="history-time">{{ formatTime(record.createdAt) }}</div>
+                </div>
+                <div class="history-amount" :class="{ 'income': record.isIncome, 'expense': !record.isIncome }">
+                  <span v-if="record.isIncome">+{{ record.amount }}</span>
+                  <span v-else>-{{ record.amount }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="history-empty" v-else>
+              <div class="empty-icon">📊</div>
+              <p class="empty-text">暂无积分记录</p>
+              <p class="empty-desc">完成任务即可获得积分</p>
+            </div>
           </div>
-          <div class="history-amount" :class="{ 'income': record.isIncome, 'expense': !record.isIncome }">
-            <span v-if="record.isIncome">+{{ record.amount }}</span>
-            <span v-else>-{{ record.amount }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="history-empty" v-else>
-        <div class="empty-icon">📊</div>
-        <p class="empty-text">暂无积分记录</p>
-        <p class="empty-desc">完成任务即可获得积分</p>
+        </transition>
       </div>
     </div>
   </div>
@@ -176,12 +186,18 @@ import { getCurrentUser } from '../data/user'
 const router = useRouter()
 
 const user = ref(null)
+const currentMainTab = ref('tasks')
 const currentFilter = ref('all')
 const updateCount = ref(0)
 
 const handlePointsUpdate = () => {
   updateCount.value++
 }
+
+const mainTabs = [
+  { value: 'tasks', label: '赚积分', icon: '🎯' },
+  { value: 'history', label: '积分明细', icon: '📊' }
+]
 
 const filterTabs = [
   { value: 'all', label: '全部' },
@@ -283,6 +299,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .points-page {
   background-color: #f5f5f5;
   min-height: calc(100vh - 80px);
@@ -411,28 +437,87 @@ onUnmounted(() => {
   color: #666;
 }
 
-.points-tasks,
-.points-history {
+.main-tabs-wrapper {
   max-width: 1200px;
   margin: 1.5rem auto 0;
   padding: 0 1rem;
 }
 
-.section-header {
+.main-tabs {
+  display: flex;
+  background-color: white;
+  border-radius: 12px 12px 0 0;
+  padding: 0.75rem 1rem 0;
+  gap: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.main-tab-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #666;
+  transition: all 0.2s ease;
+  border-radius: 8px 8px 0 0;
+  position: relative;
 }
 
-.section-icon {
-  font-size: 1.2rem;
+.main-tab-btn:hover {
+  color: #ff5a5f;
+  background-color: #fff5f5;
 }
 
-.section-title {
-  font-size: 1.1rem;
+.main-tab-btn.active {
+  color: #ff5a5f;
   font-weight: 600;
-  color: #333;
+}
+
+.main-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ff5a5f 0%, #ff7a7f 100%);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab-icon {
+  font-size: 1.1rem;
+}
+
+.tab-label {
+  font-size: 0.95rem;
+}
+
+.main-tab-content {
+  background-color: white;
+  border-radius: 0 0 12px 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-height: 400px;
+}
+
+.tasks-section,
+.history-section {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .task-list {
@@ -445,10 +530,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.task-item:hover {
+  background-color: #f5f5f5;
 }
 
 .task-icon {
@@ -489,16 +578,16 @@ onUnmounted(() => {
   color: #fa8c16;
 }
 
-.filter-tabs {
+.sub-tabs {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.tab-btn {
+.sub-tab-btn {
   padding: 0.5rem 1.25rem;
-  background-color: white;
-  border: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+  border: 1px solid transparent;
   border-radius: 20px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -506,12 +595,12 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.tab-btn:hover {
+.sub-tab-btn:hover {
   border-color: #ff5a5f;
   color: #ff5a5f;
 }
 
-.tab-btn.active {
+.sub-tab-btn.active {
   background: linear-gradient(135deg, #ff5a5f 0%, #ff7a7f 100%);
   border-color: transparent;
   color: white;
@@ -527,10 +616,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.history-item:hover {
+  background-color: #f5f5f5;
 }
 
 .history-icon {
@@ -587,8 +680,6 @@ onUnmounted(() => {
 }
 
 .history-empty {
-  background-color: white;
-  border-radius: 12px;
   padding: 3rem 1rem;
   text-align: center;
 }
@@ -626,12 +717,22 @@ onUnmounted(() => {
     justify-content: center;
   }
   
-  .filter-tabs {
+  .main-tabs {
+    padding: 0.5rem 0.75rem 0;
+  }
+  
+  .main-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+  }
+  
+  .sub-tabs {
     overflow-x: auto;
     padding-bottom: 0.5rem;
   }
   
-  .tab-btn {
+  .sub-tab-btn {
     flex-shrink: 0;
   }
 }
