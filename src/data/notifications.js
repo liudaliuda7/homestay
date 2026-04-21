@@ -1,6 +1,14 @@
 const STORAGE_KEY = 'homestay_notifications';
 const EXPIRE_DAYS = 7;
 
+export const NOTIFICATION_EVENT = 'homestay_notification_update';
+
+const emitNotificationUpdate = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(NOTIFICATION_EVENT));
+  }
+};
+
 export const NOTIFICATION_TYPES = {
   ORDER: 'order',
   REVIEW: 'review',
@@ -61,6 +69,7 @@ const saveNotifications = (notifications) => {
     expireTime: getExpireTime()
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  emitNotificationUpdate();
 };
 
 export const getNextNotificationId = () => {

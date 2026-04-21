@@ -69,7 +69,8 @@ import {
   getNotificationById,
   formatNotificationTime,
   getNotificationIcon,
-  NOTIFICATION_TYPES
+  NOTIFICATION_TYPES,
+  NOTIFICATION_EVENT
 } from '../data/notifications';
 import { getCurrentUser } from '../data/user';
 
@@ -170,8 +171,21 @@ const handleViewAll = () => {
   router.push('/user/notifications');
 };
 
+const handleNotificationUpdate = () => {
+  loadNotifications();
+};
+
 onMounted(() => {
   loadNotifications();
+  if (typeof window !== 'undefined') {
+    window.addEventListener(NOTIFICATION_EVENT, handleNotificationUpdate);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener(NOTIFICATION_EVENT, handleNotificationUpdate);
+  }
 });
 
 defineExpose({

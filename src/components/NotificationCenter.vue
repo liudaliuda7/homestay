@@ -23,27 +23,27 @@
       </div>
     </div>
     
-    <div class="notification-container">
-      <div class="filter-sidebar">
+    <div class="tab-container">
+      <div class="tab-header">
         <div 
           v-for="filter in filterOptions"
           :key="filter.value"
-          class="filter-item"
+          class="tab-item"
           :class="{ active: currentFilter === filter.value }"
           @click="handleFilterChange(filter.value)"
         >
-          <span class="filter-icon">{{ filter.icon }}</span>
-          <span class="filter-text">{{ filter.label }}</span>
+          <span class="tab-icon">{{ filter.icon }}</span>
+          <span class="tab-text">{{ filter.label }}</span>
           <span 
-            v-if="filter.value === null" 
-            class="filter-badge"
+            v-if="filter.value === null && unreadCount > 0" 
+            class="tab-badge"
           >
-            {{ unreadCount }}
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
           </span>
         </div>
       </div>
       
-      <div class="notification-list">
+      <div class="tab-content">
         <div class="empty-state" v-if="filteredNotifications.length === 0">
           <span class="empty-icon">🔔</span>
           <span class="empty-text">
@@ -71,26 +71,28 @@
           
           <div class="card-content">
             <div class="card-header">
-              <span class="card-title">{{ notification.title }}</span>
-              <span class="card-time">{{ formatTime(notification.createdAt) }}</span>
+              <div class="card-header-left">
+                <span class="card-title">{{ notification.title }}</span>
+                <span class="card-time">{{ formatTime(notification.createdAt) }}</span>
+              </div>
+              <div class="card-actions" v-if="hoveredId === notification.id">
+                <button 
+                  class="action-link"
+                  v-if="!notification.isRead"
+                  @click.stop="handleMarkRead(notification.id)"
+                >
+                  标记已读
+                </button>
+                <button 
+                  class="action-link delete"
+                  @click.stop="handleDelete(notification.id)"
+                >
+                  删除
+                </button>
+              </div>
             </div>
             <div class="card-body">
               {{ notification.content }}
-            </div>
-            <div class="card-actions" v-if="hoveredId === notification.id">
-              <button 
-                class="action-link"
-                v-if="!notification.isRead"
-                @click.stop="handleMarkRead(notification.id)"
-              >
-                标记已读
-              </button>
-              <button 
-                class="action-link delete"
-                @click.stop="handleDelete(notification.id)"
-              >
-                删除
-              </button>
             </div>
           </div>
         </div>
@@ -100,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { 
@@ -112,7 +114,8 @@ import {
   clearReadNotifications,
   formatNotificationTime,
   getNotificationIcon,
-  NOTIFICATION_TYPES
+  NOTIFICATION_TYPES,
+  NOTIFICATION_EVENT
 } from '../data/notifications';
 import { getCurrentUser } from '../data/user';
 
@@ -158,6 +161,10 @@ const loadNotifications = () => {
   notifications.value = getUserNotifications(currentUser.value.id, currentFilter.value);
 };
 
+const handleNotificationUpdate = () => {
+  loadNotifications();
+};
+
 const formatTime = (createdAt) => {
   return formatNotificationTime(createdAt);
 };
@@ -172,7 +179,6 @@ const handleFilterChange = (value) => {
 const handleNotificationClick = (notification) => {
   if (!notification.isRead) {
     markAsRead(notification.id);
-    loadNotifications();
   }
   
   switch (notification.type) {
@@ -192,7 +198,6 @@ const handleNotificationClick = (notification) => {
 const handleMarkRead = (notificationId) => {
   const result = markAsRead(notificationId);
   if (result.success) {
-    loadNotifications();
     ElMessage({
       message: '已标记为已读',
       type: 'success',
@@ -213,7 +218,6 @@ const handleMarkAllRead = async () => {
     
     const result = markAllAsRead(currentUser.value.id);
     if (result.success) {
-      loadNotifications();
       ElMessage({
         message: '已全部标记为已读',
         type: 'success',
@@ -237,7 +241,6 @@ const handleDelete = async (notificationId) => {
     
     const result = deleteNotification(notificationId, currentUser.value.id);
     if (result.success) {
-      loadNotifications();
       ElMessage({
         message: '删除成功',
         type: 'success',
@@ -261,7 +264,6 @@ const handleClearRead = async () => {
     
     const result = clearReadNotifications(currentUser.value.id);
     if (result.success) {
-      loadNotifications();
       ElMessage({
         message: '已清空已读消息',
         type: 'success',
@@ -275,6 +277,15 @@ const handleClearRead = async () => {
 
 onMounted(() => {
   loadNotifications();
+  if (typeof window !== 'undefined') {
+    window.addEventListener(NOTIFICATION_EVENT, handleNotificationUpdate);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener(NOTIFICATION_EVENT, handleNotificationUpdate);
+  }
 });
 </script>
 
@@ -329,59 +340,65 @@ onMounted(() => {
   background-color: #fff5f5;
 }
 
-.notification-container {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 1.5rem;
-}
-
-.filter-sidebar {
+.tab-container {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 1rem;
 }
 
-.filter-item {
+.tab-header {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.tab-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  border-radius: 8px;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.filter-item:hover {
-  background-color: #fafafa;
-}
-
-.filter-item.active {
-  background-color: #fff5f5;
-  color: #ff5a5f;
-}
-
-.filter-icon {
-  font-size: 1rem;
-  width: 20px;
-  text-align: center;
-}
-
-.filter-text {
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   font-size: 0.9rem;
-  flex: 1;
+  color: #666;
+  border-radius: 8px 8px 0 0;
 }
 
-.filter-badge {
+.tab-item:hover {
+  background-color: #fafafa;
+  color: #333;
+}
+
+.tab-item.active {
+  color: #ff5a5f;
+  border-bottom-color: #ff5a5f;
+  background-color: #fff5f5;
+}
+
+.tab-icon {
+  font-size: 1rem;
+}
+
+.tab-text {
+  font-weight: 500;
+}
+
+.tab-badge {
   background: #ff5a5f;
   color: white;
   font-size: 0.7rem;
-  padding: 0.125rem 0.5rem;
+  padding: 0.125rem 0.375rem;
   border-radius: 10px;
-  min-width: 18px;
+  min-width: 16px;
   text-align: center;
+  line-height: 1;
 }
 
-.notification-list {
+.tab-content {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -471,6 +488,12 @@ onMounted(() => {
   gap: 1rem;
 }
 
+.card-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
 .card-title {
   font-size: 0.95rem;
   font-weight: 600;
@@ -491,7 +514,6 @@ onMounted(() => {
   font-size: 0.85rem;
   color: #666;
   line-height: 1.6;
-  margin-bottom: 0.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -523,23 +545,19 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .notification-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .filter-sidebar {
-    flex-direction: row;
+  .tab-header {
     overflow-x: auto;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    padding-bottom: 0;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
   }
   
-  .filter-item {
+  .tab-header::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab-item {
     flex-shrink: 0;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 80px;
-    padding: 0.75rem 1rem;
   }
 }
 
@@ -578,9 +596,19 @@ onMounted(() => {
     gap: 0.25rem;
   }
   
+  .card-header-left {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+  
   .card-indicator {
     top: 1rem;
     right: 1rem;
+  }
+  
+  .tab-item {
+    padding: 0.75rem 1rem;
   }
 }
 </style>
