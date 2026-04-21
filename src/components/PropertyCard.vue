@@ -1,32 +1,46 @@
 <template>
-  <router-link :to="`/property/${property.id}`" class="property-card card-hover">
-    <div class="card-image">
-      <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
-      <div class="rating">
-        <span class="star">⭐</span>
-        <span>{{ property.rating }}</span>
-        <span>({{ property.reviews }})</span>
+  <div class="property-card card-hover">
+    <router-link :to="`/property/${property.id}`" class="card-link">
+      <div class="card-image">
+        <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
+        <div class="rating">
+          <span class="star">⭐</span>
+          <span>{{ property.rating }}</span>
+          <span>({{ property.reviews }})</span>
+        </div>
       </div>
-    </div>
-    <div class="card-content">
-      <div class="location">{{ property.location }}</div>
-      <h3 class="title">{{ property.title }}</h3>
-      <div class="info">
-        <span>{{ property.guests }}位房客</span>
-        <span>·</span>
-        <span>{{ property.bedroom }}间卧室</span>
-        <span>·</span>
-        <span>{{ property.bathroom }}间卫生间</span>
+      <div class="card-content">
+        <div class="location">{{ property.location }}</div>
+        <h3 class="title">{{ property.title }}</h3>
+        <div class="info">
+          <span>{{ property.guests }}位房客</span>
+          <span>·</span>
+          <span>{{ property.bedroom }}间卧室</span>
+          <span>·</span>
+          <span>{{ property.bathroom }}间卫生间</span>
+        </div>
+        <div class="price">
+          <span class="price-value">¥{{ property.price }}</span>
+          <span class="price-unit">/晚</span>
+        </div>
       </div>
-      <div class="price">
-        <span class="price-value">¥{{ property.price }}</span>
-        <span class="price-unit">/晚</span>
-      </div>
-    </div>
-  </router-link>
+    </router-link>
+    <button class="share-btn" @click.stop="handleShare">
+      <span class="share-icon">📤</span>
+    </button>
+  </div>
+  
+  <SharePanel
+    v-model:visible="sharePanelVisible"
+    :share-data="shareData"
+    share-type="property"
+  />
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+import SharePanel from './SharePanel.vue'
+
 const props = defineProps({
   property: {
     type: Object,
@@ -34,15 +48,30 @@ const props = defineProps({
   }
 })
 
+const sharePanelVisible = ref(false)
+
 const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/800/600'
+
+const shareData = computed(() => ({
+  id: props.property.id,
+  title: props.property.title,
+  description: props.property.location,
+  image: props.property.images?.[0] || DEFAULT_PROPERTY_IMAGE,
+  price: props.property.price
+}))
 
 const handleImageError = (event) => {
   event.target.src = DEFAULT_PROPERTY_IMAGE
+}
+
+const handleShare = () => {
+  sharePanelVisible.value = true
 }
 </script>
 
 <style scoped>
 .property-card {
+  position: relative;
   display: block;
   text-decoration: none;
   color: #333;
@@ -59,10 +88,16 @@ const handleImageError = (event) => {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
+.card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .card-image {
   position: relative;
   width: 100%;
-  padding-top: 60%; /* 16:9 宽高比 */
+  padding-top: 60%;
   overflow: hidden;
 }
 
@@ -92,11 +127,45 @@ const handleImageError = (event) => {
   display: flex;
   align-items: center;
   gap: 4px;
+  z-index: 1;
 }
 
 .star {
   color: #ff5a5f;
   font-size: 0.8rem;
+}
+
+.share-btn {
+  position: absolute;
+  top: 12px;
+  right: 80px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.share-btn:hover {
+  background-color: #ff5a5f;
+  transform: scale(1.1);
+}
+
+.share-btn:hover .share-icon {
+  color: white;
+}
+
+.share-icon {
+  font-size: 1rem;
+  color: #666;
+  transition: color 0.2s ease;
 }
 
 .card-content {
@@ -143,7 +212,6 @@ const handleImageError = (event) => {
   color: #666;
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
   .property-card {
     margin-bottom: 1rem;
@@ -160,6 +228,16 @@ const handleImageError = (event) => {
   .rating {
     padding: 4px 8px;
     font-size: 0.8rem;
+  }
+  
+  .share-btn {
+    width: 28px;
+    height: 28px;
+    right: 70px;
+  }
+  
+  .share-icon {
+    font-size: 0.9rem;
   }
 }
 </style>
