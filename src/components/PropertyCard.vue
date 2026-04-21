@@ -3,10 +3,15 @@
     <router-link :to="`/property/${property.id}`" class="card-link">
       <div class="card-image">
         <img :src="property.images[0]" :alt="property.title" class="image" @error="handleImageError" />
-        <div class="rating">
-          <span class="star">⭐</span>
-          <span>{{ property.rating }}</span>
-          <span>({{ property.reviews }})</span>
+        <div class="top-actions">
+          <button class="share-btn" @click.stop="handleShare">
+            <span class="share-icon">📤</span>
+          </button>
+          <div class="rating">
+            <span class="star">⭐</span>
+            <span>{{ property.rating }}</span>
+            <span>({{ property.reviews }})</span>
+          </div>
         </div>
       </div>
       <div class="card-content">
@@ -25,9 +30,6 @@
         </div>
       </div>
     </router-link>
-    <button class="share-btn" @click.stop="handleShare">
-      <span class="share-icon">📤</span>
-    </button>
   </div>
   
   <SharePanel
@@ -115,30 +117,16 @@ const handleShare = () => {
   transform: scale(1.05);
 }
 
-.rating {
+.top-actions {
   position: absolute;
   top: 12px;
   right: 12px;
-  background-color: white;
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
   display: flex;
-  align-items: center;
-  gap: 4px;
+  gap: 8px;
   z-index: 1;
 }
 
-.star {
-  color: #ff5a5f;
-  font-size: 0.8rem;
-}
-
 .share-btn {
-  position: absolute;
-  top: 12px;
-  right: 80px;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -148,7 +136,6 @@ const handleShare = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -166,6 +153,22 @@ const handleShare = () => {
   font-size: 1rem;
   color: #666;
   transition: color 0.2s ease;
+}
+
+.rating {
+  background-color: white;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star {
+  color: #ff5a5f;
+  font-size: 0.8rem;
 }
 
 .card-content {
@@ -233,7 +236,6 @@ const handleShare = () => {
   .share-btn {
     width: 28px;
     height: 28px;
-    right: 70px;
   }
   
   .share-icon {

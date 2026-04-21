@@ -28,158 +28,166 @@
       </div>
     </div>
     
-    <div class="invite-code-section">
-      <div class="section-header">
-        <span class="section-icon">🔑</span>
-        <span class="section-title">我的邀请码</span>
-      </div>
-      <div class="invite-code-box">
-        <div class="code-display">
-          <span class="code-text">{{ inviteCode }}</span>
-        </div>
-        <button class="copy-btn" @click="copyInviteCode">
-          <span class="copy-icon">📋</span>
-          复制
-        </button>
-      </div>
-    </div>
-    
-    <div class="invite-link-section">
-      <div class="section-header">
-        <span class="section-icon">🔗</span>
-        <span class="section-title">邀请链接</span>
-      </div>
-      <div class="invite-link-box">
-        <div class="link-display">
-          <span class="link-text">{{ inviteLink }}</span>
-        </div>
-        <button class="copy-btn" @click="copyInviteLink">
-          <span class="copy-icon">📋</span>
-          复制链接
-        </button>
-      </div>
-    </div>
-    
-    <div class="invite-qrcode-section" v-if="showQRCode">
-      <div class="section-header">
-        <span class="section-icon">📱</span>
-        <span class="section-title">扫码注册</span>
-      </div>
-      <div class="qrcode-container">
-        <div class="qrcode-box">
-          <div class="qrcode-placeholder">
-            <span class="qrcode-icon">📱</span>
-            <span class="qrcode-text">扫码即可注册</span>
-          </div>
-        </div>
-        <p class="qrcode-desc">好友扫描二维码即可注册，双方均可获得奖励</p>
-      </div>
-    </div>
-    
-    <div class="reward-progress-section">
-      <div class="section-header">
-        <span class="section-icon">🎁</span>
-        <span class="section-title">奖励进度</span>
-      </div>
-      <div class="reward-list">
-        <div 
-          v-for="config in rewardConfigs" 
-          :key="config.id"
-          class="reward-item"
-          :class="{ 
-            'earned': isRewardEarned(config.id),
-            'eligible': isRewardEligible(config.id) && !isRewardEarned(config.id)
-          }"
+    <div class="main-tabs-wrapper">
+      <div class="main-tabs">
+        <button 
+          v-for="tab in mainTabs" 
+          :key="tab.value"
+          class="main-tab-btn"
+          :class="{ active: currentMainTab === tab.value }"
+          @click="currentMainTab = tab.value"
         >
-          <div class="reward-info">
-            <div class="reward-name">{{ config.rewardName }}</div>
-            <div class="reward-desc">{{ config.description }}</div>
-          </div>
-          <div class="reward-progress">
-            <div class="progress-info">
-              <span class="current-count">{{ stats.firstOrder }}</span>
-              <span class="separator">/</span>
-              <span class="required-count">{{ config.inviteCount }}</span>
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.label }}</span>
+        </button>
+      </div>
+      
+      <div class="main-tab-content">
+        <transition name="fade" mode="out-in">
+          <div v-if="currentMainTab === 'invite'" key="invite" class="invite-section">
+            <div class="invite-code-section">
+              <div class="section-header">
+                <span class="section-icon">🔑</span>
+                <span class="section-title">我的邀请码</span>
+              </div>
+              <div class="invite-code-box">
+                <div class="code-display">
+                  <span class="code-text">{{ inviteCode }}</span>
+                </div>
+                <button class="copy-btn" @click="copyInviteCode">
+                  <span class="copy-icon">📋</span>
+                  复制
+                </button>
+              </div>
             </div>
-            <div class="progress-bar">
+            
+            <div class="invite-link-section">
+              <div class="section-header">
+                <span class="section-icon">🔗</span>
+                <span class="section-title">邀请链接</span>
+              </div>
+              <div class="invite-link-box">
+                <div class="link-display">
+                  <span class="link-text">{{ inviteLink }}</span>
+                </div>
+                <button class="copy-btn" @click="copyInviteLink">
+                  <span class="copy-icon">📋</span>
+                  复制链接
+                </button>
+              </div>
+            </div>
+            
+            <div class="invite-qrcode-section" v-if="showQRCode">
+              <div class="section-header">
+                <span class="section-icon">📱</span>
+                <span class="section-title">扫码注册</span>
+              </div>
+              <div class="qrcode-container">
+                <div class="qrcode-box">
+                  <div class="qrcode-placeholder">
+                    <span class="qrcode-icon">📱</span>
+                    <span class="qrcode-text">扫码即可注册</span>
+                  </div>
+                </div>
+                <p class="qrcode-desc">好友扫描二维码即可注册，双方均可获得奖励</p>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else-if="currentMainTab === 'rewards'" key="rewards" class="rewards-section">
+            <div class="reward-list">
               <div 
-                class="progress-fill" 
-                :style="{ width: Math.min((stats.firstOrder / config.inviteCount) * 100, 100) + '%' }"
-              ></div>
+                v-for="config in rewardConfigs" 
+                :key="config.id"
+                class="reward-item"
+                :class="{ 
+                  'earned': isRewardEarned(config.id),
+                  'eligible': isRewardEligible(config.id) && !isRewardEarned(config.id)
+                }"
+              >
+                <div class="reward-info">
+                  <div class="reward-name">{{ config.rewardName }}</div>
+                  <div class="reward-desc">{{ config.description }}</div>
+                </div>
+                <div class="reward-progress">
+                  <div class="progress-info">
+                    <span class="current-count">{{ stats.firstOrder }}</span>
+                    <span class="separator">/</span>
+                    <span class="required-count">{{ config.inviteCount }}</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div 
+                      class="progress-fill" 
+                      :style="{ width: Math.min((stats.firstOrder / config.inviteCount) * 100, 100) + '%' }"
+                    ></div>
+                  </div>
+                </div>
+                <div class="reward-status">
+                  <span v-if="isRewardEarned(config.id)" class="status-earned">已领取</span>
+                  <span v-else-if="isRewardEligible(config.id)" class="status-eligible">
+                    <button class="claim-btn" @click="handleClaimReward(config)">领取</button>
+                  </span>
+                  <span v-else class="status-pending">进行中</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="reward-status">
-            <span v-if="isRewardEarned(config.id)" class="status-earned">已领取</span>
-            <span v-else-if="isRewardEligible(config.id)" class="status-eligible">
-              <button class="claim-btn" @click="claimReward(config)">领取</button>
-            </span>
-            <span v-else class="status-pending">进行中</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="invite-list-section">
-      <div class="section-header">
-        <span class="section-icon">👥</span>
-        <span class="section-title">我的邀请好友</span>
-        <span class="section-count">({{ invitations.length }})</span>
-      </div>
-      <div class="invite-list" v-if="invitations.length > 0">
-        <div v-for="invitation in invitations" :key="invitation.id" class="invite-item">
-          <div class="invite-avatar">
-            <span class="avatar-placeholder">👤</span>
-          </div>
-          <div class="invite-details">
-            <div class="invite-name">{{ invitation.inviteeName }}</div>
-            <div class="invite-time">{{ formatTime(invitation.createdAt) }}</div>
-          </div>
-          <div class="invite-status" :class="`status-${invitation.status}`">
-            {{ getStatusLabel(invitation.status) }}
-          </div>
-        </div>
-      </div>
-      <div class="invite-empty" v-else>
-        <div class="empty-icon">👥</div>
-        <p class="empty-text">还没有邀请好友</p>
-        <p class="empty-desc">快去邀请好友吧，双方均可获得奖励</p>
-      </div>
-    </div>
-    
-    <div class="ranking-section">
-      <div class="section-header">
-        <span class="section-icon">🏆</span>
-        <span class="section-title">邀请排行榜</span>
-      </div>
-      <div class="ranking-list" v-if="ranking.length > 0">
-        <div 
-          v-for="(item, index) in ranking" 
-          :key="item.inviterId"
-          class="ranking-item"
-          :class="`rank-${item.rank}`"
-        >
-          <div class="ranking-number" :class="`rank-${item.rank}`">
-            <span v-if="item.rank <= 3" class="top-icon">{{ getTopIcon(item.rank) }}</span>
-            <span v-else>{{ item.rank }}</span>
-          </div>
-          <div class="ranking-avatar">
-            <span class="avatar-placeholder">👤</span>
-          </div>
-          <div class="ranking-info">
-            <div class="ranking-name">用户 {{ item.inviterId }}</div>
-            <div class="ranking-stats">
-              <span>邀请 {{ item.inviteeCount }} 人</span>
-              <span>·</span>
-              <span>首单 {{ item.firstOrderCount }} 人</span>
+          
+          <div v-else-if="currentMainTab === 'friends'" key="friends" class="friends-section">
+            <div class="invite-list" v-if="invitations.length > 0">
+              <div v-for="invitation in invitations" :key="invitation.id" class="invite-item">
+                <div class="invite-avatar">
+                  <span class="avatar-placeholder">👤</span>
+                </div>
+                <div class="invite-details">
+                  <div class="invite-name">{{ invitation.inviteeName }}</div>
+                  <div class="invite-time">{{ formatTime(invitation.createdAt) }}</div>
+                </div>
+                <div class="invite-status" :class="`status-${invitation.status}`">
+                  {{ getStatusLabel(invitation.status) }}
+                </div>
+              </div>
+            </div>
+            <div class="invite-empty" v-else>
+              <div class="empty-icon">👥</div>
+              <p class="empty-text">还没有邀请好友</p>
+              <p class="empty-desc">快去邀请好友吧，双方均可获得奖励</p>
             </div>
           </div>
-          <div class="ranking-badge" v-if="item.rank <= 3">
-            {{ getBadgeText(item.rank) }}
+          
+          <div v-else-if="currentMainTab === 'ranking'" key="ranking" class="ranking-section">
+            <div class="ranking-list" v-if="ranking.length > 0">
+              <div 
+                v-for="(item, index) in ranking" 
+                :key="item.inviterId"
+                class="ranking-item"
+                :class="`rank-${item.rank}`"
+              >
+                <div class="ranking-number" :class="`rank-${item.rank}`">
+                  <span v-if="item.rank <= 3" class="top-icon">{{ getTopIcon(item.rank) }}</span>
+                  <span v-else>{{ item.rank }}</span>
+                </div>
+                <div class="ranking-avatar">
+                  <span class="avatar-placeholder">👤</span>
+                </div>
+                <div class="ranking-info">
+                  <div class="ranking-name">用户 {{ item.inviterId }}</div>
+                  <div class="ranking-stats">
+                    <span>邀请 {{ item.inviteeCount }} 人</span>
+                    <span>·</span>
+                    <span>首单 {{ item.firstOrderCount }} 人</span>
+                  </div>
+                </div>
+                <div class="ranking-badge" v-if="item.rank <= 3">
+                  {{ getBadgeText(item.rank) }}
+                </div>
+              </div>
+            </div>
+            <div class="ranking-empty" v-else>
+              <p class="empty-text">暂无排行榜数据</p>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="ranking-empty" v-else>
-        <p class="empty-text">暂无排行榜数据</p>
+        </transition>
       </div>
     </div>
   </div>
@@ -210,7 +218,15 @@ const router = useRouter()
 
 const user = ref(null)
 const showQRCode = ref(true)
+const currentMainTab = ref('invite')
 const updateCount = ref(0)
+
+const mainTabs = [
+  { value: 'invite', label: '邀请方式', icon: '🔗' },
+  { value: 'rewards', label: '奖励进度', icon: '🎁' },
+  { value: 'friends', label: '邀请好友', icon: '👥' },
+  { value: 'ranking', label: '排行榜', icon: '🏆' }
+]
 
 const handleInvitationUpdate = () => {
   updateCount.value++
@@ -365,6 +381,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .invite-page {
   background-color: #f5f5f5;
   min-height: calc(100vh - 80px);
@@ -428,15 +454,95 @@ onUnmounted(() => {
   color: #666;
 }
 
-.invite-code-section,
-.invite-link-section,
-.invite-qrcode-section,
-.reward-progress-section,
-.invite-list-section,
-.ranking-section {
+.main-tabs-wrapper {
   max-width: 1200px;
   margin: 1.5rem auto 0;
   padding: 0 1rem;
+}
+
+.main-tabs {
+  display: flex;
+  background-color: white;
+  border-radius: 12px 12px 0 0;
+  padding: 0.75rem 1rem 0;
+  gap: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  overflow-x: auto;
+}
+
+.main-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.main-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #666;
+  transition: all 0.2s ease;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.main-tab-btn:hover {
+  color: #ff5a5f;
+  background-color: #fff5f5;
+}
+
+.main-tab-btn.active {
+  color: #ff5a5f;
+  font-weight: 600;
+}
+
+.main-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ff5a5f 0%, #ff7a7f 100%);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab-icon {
+  font-size: 1.1rem;
+}
+
+.tab-label {
+  font-size: 0.9rem;
+}
+
+.main-tab-content {
+  background-color: white;
+  border-radius: 0 0 12px 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-height: 300px;
+}
+
+.invite-section,
+.rewards-section,
+.friends-section,
+.ranking-section {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-header {
@@ -462,14 +568,19 @@ onUnmounted(() => {
   margin-left: 0.25rem;
 }
 
+.invite-code-section,
+.invite-link-section,
+.invite-qrcode-section {
+  margin-bottom: 1.5rem;
+}
+
 .invite-code-box,
 .invite-link-box {
   display: flex;
   gap: 1rem;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .code-display,
@@ -478,9 +589,10 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8f8f8;
+  background-color: white;
   border-radius: 8px;
   padding: 0.75rem;
+  border: 1px solid #e0e0e0;
 }
 
 .code-text {
@@ -522,11 +634,10 @@ onUnmounted(() => {
 }
 
 .qrcode-container {
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .qrcode-box {
@@ -538,7 +649,7 @@ onUnmounted(() => {
 .qrcode-placeholder {
   width: 160px;
   height: 160px;
-  background-color: #f5f5f5;
+  background-color: white;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -573,10 +684,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
@@ -637,7 +747,7 @@ onUnmounted(() => {
 
 .progress-bar {
   height: 6px;
-  background-color: #f0f0f0;
+  background-color: #e0e0e0;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -696,10 +806,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .invite-avatar {
@@ -761,8 +870,6 @@ onUnmounted(() => {
 
 .invite-empty,
 .ranking-empty {
-  background-color: white;
-  border-radius: 12px;
   padding: 3rem 1rem;
   text-align: center;
 }
@@ -795,10 +902,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: white;
+  background-color: #fafafa;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .ranking-item.rank-1 {
@@ -953,6 +1059,14 @@ onUnmounted(() => {
   
   .code-text {
     font-size: 1.25rem;
+  }
+  
+  .main-tab-btn {
+    padding: 0.625rem 1rem;
+  }
+  
+  .tab-label {
+    font-size: 0.85rem;
   }
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="share-panel-wrapper">
     <transition name="fade">
       <div v-if="visible" class="share-overlay" @click="handleOverlayClick">
-        <transition name="slide-up">
+        <transition name="scale">
           <div v-if="visible" class="share-panel" @click.stop>
             <div class="share-header">
               <h3 class="share-title">分享到</h3>
@@ -248,14 +248,14 @@ const handleOverlayClick = () => {
   opacity: 0;
 }
 
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+.scale-enter-active,
+.scale-leave-active {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
 }
 
-.slide-up-enter-from,
-.slide-up-leave-to {
-  transform: translateY(100%);
+.scale-enter-from,
+.scale-leave-to {
+  transform: scale(0.8);
   opacity: 0;
 }
 
@@ -272,17 +272,18 @@ const handleOverlayClick = () => {
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 }
 
 .share-panel {
   width: 100%;
-  max-width: 500px;
+  max-width: 400px;
   background-color: white;
-  border-radius: 16px 16px 0 0;
+  border-radius: 20px;
   padding: 1.5rem;
-  animation: slideUp 0.3s ease;
+  margin: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .share-header {
@@ -525,18 +526,11 @@ const handleOverlayClick = () => {
   color: rgba(255, 255, 255, 0.8);
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
 @media (max-width: 480px) {
   .share-panel {
-    border-radius: 12px 12px 0 0;
+    max-width: calc(100% - 2rem);
+    margin: 1rem;
+    border-radius: 16px;
     padding: 1rem;
   }
   
