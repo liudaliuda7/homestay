@@ -1,6 +1,11 @@
 const STORAGE_KEY = 'homestay_orders';
 const EXPIRE_DAYS = 30;
 
+import { 
+  createOrderNotification,
+  ORDER_NOTIFICATION_SUBTYPES
+} from './notifications';
+
 export const ORDER_STATUS = {
   PENDING: 'pending',
   PAID: 'paid',
@@ -79,6 +84,8 @@ export const createOrder = (orderData, userId) => {
   orders.push(newOrder);
   saveOrders(orders);
   
+  createOrderNotification(newOrder, ORDER_NOTIFICATION_SUBTYPES.CREATE, userId);
+  
   return {
     success: true,
     message: '订单创建成功',
@@ -100,6 +107,8 @@ export const payOrder = (orderId) => {
   orders[orderIndex].status = ORDER_STATUS.PAID;
   orders[orderIndex].paidAt = new Date().toISOString();
   saveOrders(orders);
+  
+  createOrderNotification(orders[orderIndex], ORDER_NOTIFICATION_SUBTYPES.PAY, orders[orderIndex].userId);
   
   return {
     success: true,
@@ -128,6 +137,8 @@ export const cancelOrder = (orderId) => {
   
   orders[orderIndex].status = ORDER_STATUS.CANCELLED;
   saveOrders(orders);
+  
+  createOrderNotification(orders[orderIndex], ORDER_NOTIFICATION_SUBTYPES.CANCEL, orders[orderIndex].userId);
   
   return {
     success: true,
