@@ -32,13 +32,13 @@
         </div>
       </div>
     </div>
+    
+    <SharePanel
+      v-model:visible="sharePanelVisible"
+      :share-data="shareData"
+      share-type="property"
+    />
   </div>
-  
-  <SharePanel
-    v-model:visible="sharePanelVisible"
-    :share-data="shareData"
-    share-type="property"
-  />
 </template>
 
 <script setup>
@@ -84,7 +84,6 @@ const handleShare = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   background-color: white;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  margin-bottom: 1.5rem;
 }
 
 .property-card:hover {
@@ -222,9 +221,6 @@ const handleShare = () => {
 }
 
 @media (max-width: 768px) {
-  .property-card {
-    margin-bottom: 1rem;
-  }
   
   .card-content {
     padding: 0.75rem;
