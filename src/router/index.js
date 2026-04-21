@@ -8,6 +8,8 @@ import ProfileInfo from '../components/ProfileInfo.vue';
 import OrderList from '../components/OrderList.vue';
 import FavoritesList from '../components/FavoritesList.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
+import PointsPage from '../components/PointsPage.vue';
+import InvitePage from '../components/InvitePage.vue';
 import SecuritySettings from '../components/SecuritySettings.vue';
 import HelpCenter from '../components/HelpCenter.vue';
 import { getCurrentUser } from '../data/user';
@@ -72,6 +74,18 @@ const routes = [
         name: 'UserNotifications',
         component: NotificationCenter,
         meta: { title: '消息中心' }
+      },
+      {
+        path: 'points',
+        name: 'UserPoints',
+        component: PointsPage,
+        meta: { title: '我的积分' }
+      },
+      {
+        path: 'invite',
+        name: 'UserInvite',
+        component: InvitePage,
+        meta: { title: '邀请好友' }
       },
       {
         path: 'security',

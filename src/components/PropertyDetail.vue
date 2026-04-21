@@ -47,6 +47,13 @@
                   <span>({{ propertyReviews.length }}条评价)</span>
                 </div>
                 <button 
+                  class="share-btn"
+                  @click="handleShare"
+                >
+                  <span class="share-icon">📤</span>
+                  <span class="share-label">分享</span>
+                </button>
+                <button 
                   class="favorite-btn" 
                   :class="{ active: isFavorited, animating: isAnimating }"
                   @click="handleToggleFavorite"
@@ -309,6 +316,12 @@
         </span>
       </template>
     </el-dialog>
+    
+    <SharePanel
+      v-model:visible="sharePanelVisible"
+      :share-data="shareData"
+      share-type="property"
+    />
   </div>
 </template>
 
@@ -321,15 +334,14 @@ import { getReviewsByPropertyId, toggleLike } from '../data/reviews';
 import { isFavorite, toggleFavorite } from '../data/favorites';
 import { createOrder } from '../data/orders';
 import { getCurrentUser } from '../data/user';
+import SharePanel from './SharePanel.vue';
 
 const route = useRoute()
 const router = useRouter()
 
-// 默认图片URL
 const DEFAULT_PROPERTY_IMAGE = 'https://picsum.photos/seed/default-property/800/600'
 const DEFAULT_AVATAR_IMAGE = 'https://picsum.photos/seed/default-avatar/100/100'
 
-// 响应式状态
 const property = ref(null)
 const loading = ref(true)
 const error = ref(null)
@@ -343,8 +355,16 @@ const isAnimating = ref(false)
 const bookingDialogVisible = ref(false)
 const creatingOrder = ref(false)
 const animatingReviews = ref(new Set())
+const sharePanelVisible = ref(false)
 
-// 计算当前显示的图片
+const shareData = computed(() => ({
+  id: property.value?.id,
+  title: property.value?.title,
+  description: property.value?.location,
+  image: property.value?.images?.[0] || DEFAULT_PROPERTY_IMAGE,
+  price: property.value?.price
+}))
+
 const currentImage = computed(() => {
   return property.value ? property.value.images[currentImageIndex.value] : '';
 })
@@ -615,6 +635,10 @@ const handleConfirmBooking = async () => {
 }
 
 // 处理收藏切换
+const handleShare = () => {
+  sharePanelVisible.value = true;
+}
+
 const handleToggleFavorite = () => {
   if (!property.value) return;
   
@@ -839,6 +863,36 @@ onMounted(() => {
   background-color: white;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-btn:hover {
+  border-color: #ff5a5f;
+  background-color: #fff5f5;
+}
+
+.share-icon {
+  font-size: 1rem;
+}
+
+.share-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.share-btn:hover .share-label {
+  color: #ff5a5f;
 }
 
 .favorite-btn:hover {

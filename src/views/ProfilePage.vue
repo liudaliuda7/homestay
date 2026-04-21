@@ -67,6 +67,8 @@ const menuItems = computed(() => {
     { id: 'order', name: '我的订单', icon: '📋', path: '/user/order', badge: 0 },
     { id: 'favorites', name: '我的收藏', icon: '❤️', path: '/user/favorites', badge: getFavoriteCount() },
     { id: 'notifications', name: '消息中心', icon: '🔔', path: '/user/notifications', badge: unreadCount },
+    { id: 'points', name: '我的积分', icon: '💰', path: '/user/points' },
+    { id: 'invite', name: '邀请好友', icon: '👥', path: '/user/invite' },
     { id: 'security', name: '账户安全', icon: '🔐', path: '/user/security' },
     { id: 'help', name: '帮助中心', icon: '❓', path: '/user/help' }
   ]
@@ -82,6 +84,8 @@ const isActiveMenu = (menuId) => {
     'order': '/user/order',
     'favorites': '/user/favorites',
     'notifications': '/user/notifications',
+    'points': '/user/points',
+    'invite': '/user/invite',
     'security': '/user/security',
     'help': '/user/help'
   }
