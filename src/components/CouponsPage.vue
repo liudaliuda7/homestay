@@ -23,21 +23,6 @@
       </div>
     </div>
     
-    <div class="coupons-stats">
-      <div class="stat-item" @click="currentTab = 'available'" :class="{ active: currentTab === 'available' }">
-        <div class="stat-value">{{ couponCounts.available }}</div>
-        <div class="stat-label">可使用</div>
-      </div>
-      <div class="stat-item" @click="currentTab = 'used'" :class="{ active: currentTab === 'used' }">
-        <div class="stat-value">{{ couponCounts.used }}</div>
-        <div class="stat-label">已使用</div>
-      </div>
-      <div class="stat-item" @click="currentTab = 'expired'" :class="{ active: currentTab === 'expired' }">
-        <div class="stat-value">{{ couponCounts.expired }}</div>
-        <div class="stat-label">已过期</div>
-      </div>
-    </div>
-    
     <div class="main-tabs-wrapper">
       <div class="main-tabs">
         <button 
@@ -48,6 +33,7 @@
           @click="currentTab = tab.value"
         >
           <span class="tab-label">{{ tab.label }}</span>
+          <span class="tab-count">({{ getTabCount(tab.value) }})</span>
           <span v-if="tab.value === 'available' && couponCounts.expiringSoon > 0" class="tab-badge">
             {{ couponCounts.expiringSoon }}
           </span>
@@ -283,6 +269,20 @@ const expiredCoupons = computed(() => {
   return getUserCoupons(user.value.id, COUPON_STATUS.EXPIRED)
 })
 
+const getTabCount = (tabValue) => {
+  if (!user.value) return 0
+  switch (tabValue) {
+    case 'available':
+      return couponCounts.value.available
+    case 'used':
+      return couponCounts.value.used
+    case 'expired':
+      return couponCounts.value.expired
+    default:
+      return 0
+  }
+}
+
 const getTypeLabel = (type) => {
   return COUPON_TYPE_LABELS[type] || type
 }
@@ -436,47 +436,6 @@ onUnmounted(() => {
   font-size: 1.1rem;
 }
 
-.coupons-stats {
-  max-width: 1200px;
-  margin: -1rem auto 0;
-  padding: 0 1rem;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.stat-item {
-  background-color: white;
-  border-radius: 12px;
-  padding: 1rem;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
-}
-
-.stat-item:hover {
-  border-color: #ff5a5f;
-}
-
-.stat-item.active {
-  border-color: #ff5a5f;
-  background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ff5a5f;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: #666;
-}
-
 .main-tabs-wrapper {
   max-width: 1200px;
   margin: 1.5rem auto 0;
@@ -526,6 +485,19 @@ onUnmounted(() => {
   height: 2px;
   background: linear-gradient(90deg, #ff5a5f 0%, #ff7a7f 100%);
   border-radius: 2px 2px 0 0;
+}
+
+.tab-label {
+}
+
+.tab-count {
+  font-size: 0.85rem;
+  color: #999;
+  margin-left: 0.25rem;
+}
+
+.main-tab-btn.active .tab-count {
+  color: #ff5a5f;
 }
 
 .tab-badge {
@@ -826,10 +798,6 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 1.5rem;
     text-align: center;
-  }
-  
-  .coupons-stats {
-    grid-template-columns: 1fr;
   }
   
   .main-tabs {

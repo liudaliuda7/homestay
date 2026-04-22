@@ -514,7 +514,7 @@ onActivated(() => {
 
 .regular-section {
   max-width: 1200px;
-  margin: 0 auto 1.5rem;
+  margin: 1rem auto 1.5rem;
   padding: 0 1rem;
 }
 
