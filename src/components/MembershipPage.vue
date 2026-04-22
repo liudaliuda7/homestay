@@ -39,108 +39,240 @@
       </div>
     </div>
     
-    <div class="points-section">
-      <div class="points-card">
-        <div class="points-header">
-          <div class="points-title">
-            <span class="points-icon">💰</span>
-            <span>积分余额</span>
-          </div>
-          <div class="points-multiplier">
-            <span class="multiplier-label">积分倍率</span>
-            <span class="multiplier-value">{{ pointsMultiplier }}倍</span>
-          </div>
-        </div>
-        <div class="points-value">{{ totalPoints }}</div>
-        <div class="points-tips">
-          <span>消费 ¥1 积 1 分（会员倍率）</span>
-          <span class="points-expire-tip">每年年底清零上一年积分</span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="benefits-section">
-      <div class="section-header">
-        <span class="section-icon">🎁</span>
-        <span class="section-title">会员权益</span>
-        <span class="section-count">共 {{ allBenefits.length }} 项</span>
-      </div>
-      
-      <div class="benefits-grid">
-        <div v-for="benefit in allBenefits" :key="benefit.id" class="benefit-card">
-          <div class="benefit-icon">{{ benefit.icon }}</div>
-          <div class="benefit-content">
-            <div class="benefit-name">{{ benefit.name }}</div>
-            <div class="benefit-desc">{{ benefit.description }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="history-section">
-      <div class="section-header">
-        <span class="section-icon">📊</span>
-        <span class="section-title">积分记录</span>
-      </div>
-      
-      <div class="year-filter">
+    <div class="tabs-wrapper">
+      <div class="main-tabs">
         <button 
-          v-for="year in availableYears" 
-          :key="year"
-          class="year-btn"
-          :class="{ active: selectedYear === year }"
-          @click="selectedYear = year"
+          v-for="tab in mainTabs" 
+          :key="tab.value"
+          class="main-tab-btn"
+          :class="{ active: currentTab === tab.value }"
+          @click="currentTab = tab.value"
         >
-          {{ year }}年
-        </button>
-        <button class="year-btn" :class="{ active: selectedYear === null }" @click="selectedYear = null">
-          全部
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.label }}</span>
         </button>
       </div>
       
-      <div class="history-list" v-if="filteredHistory.length > 0">
-        <div v-for="record in filteredHistory" :key="record.id" class="history-item">
-          <div class="history-left">
-            <div class="history-icon" :class="record.type">
-              {{ getHistoryIcon(record) }}
+      <transition name="fade" mode="out-in">
+        <div class="tab-content" :key="currentTab">
+          
+          <div v-if="currentTab === 'overview'" class="tab-panel">
+            <div class="points-section">
+              <div class="points-card">
+                <div class="points-header">
+                  <div class="points-title">
+                    <span class="points-icon">💰</span>
+                    <span>积分余额</span>
+                  </div>
+                  <div class="points-multiplier">
+                    <span class="multiplier-label">积分倍率</span>
+                    <span class="multiplier-value">{{ pointsMultiplier }}倍</span>
+                  </div>
+                </div>
+                <div class="points-value">{{ totalPoints }}</div>
+                <div class="points-tips">
+                  <span>消费 ¥1 积 1 分（会员倍率）</span>
+                  <span class="points-expire-tip">每年年底清零上一年积分</span>
+                </div>
+              </div>
             </div>
-            <div class="history-info">
-              <div class="history-source">{{ getHistorySourceLabel(record) }}</div>
-              <div class="history-desc">{{ record.description }}</div>
-              <div class="history-date">{{ formatDate(record.createdAt) }}</div>
+            
+            <div class="benefits-section">
+              <div class="section-header">
+                <span class="section-icon">🎁</span>
+                <span class="section-title">会员权益</span>
+                <span class="section-count">共 {{ allBenefits.length }} 项</span>
+              </div>
+              
+              <div class="benefits-grid">
+                <div v-for="benefit in allBenefits" :key="benefit.id" class="benefit-card">
+                  <div class="benefit-icon">{{ benefit.icon }}</div>
+                  <div class="benefit-content">
+                    <div class="benefit-name">{{ benefit.name }}</div>
+                    <div class="benefit-desc">{{ benefit.description }}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="history-points" :class="record.type">
-            {{ record.points > 0 ? '+' : '' }}{{ record.points }}
+          
+          <div v-else-if="currentTab === 'history'" class="tab-panel">
+            <div class="history-section">
+              <div class="section-header">
+                <span class="section-icon">📊</span>
+                <span class="section-title">积分记录</span>
+              </div>
+              
+              <div class="year-filter">
+                <button 
+                  v-for="year in availableYears" 
+                  :key="year"
+                  class="year-btn"
+                  :class="{ active: selectedYear === year }"
+                  @click="selectedYear = year"
+                >
+                  {{ year }}年
+                </button>
+                <button class="year-btn" :class="{ active: selectedYear === null }" @click="selectedYear = null">
+                  全部
+                </button>
+              </div>
+              
+              <div class="history-list" v-if="filteredHistory.length > 0">
+                <div v-for="record in filteredHistory" :key="record.id" class="history-item">
+                  <div class="history-left">
+                    <div class="history-icon" :class="record.type">
+                      {{ getHistoryIcon(record) }}
+                    </div>
+                    <div class="history-info">
+                      <div class="history-source">{{ getHistorySourceLabel(record) }}</div>
+                      <div class="history-desc">{{ record.description }}</div>
+                      <div class="history-date">{{ formatDate(record.createdAt) }}</div>
+                    </div>
+                  </div>
+                  <div class="history-points" :class="record.type">
+                    {{ record.points > 0 ? '+' : '' }}{{ record.points }}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="history-empty" v-else>
+                <div class="empty-icon">📋</div>
+                <p class="empty-text">暂无积分记录</p>
+                <p class="empty-desc">消费或完成任务后会在这里显示</p>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else-if="currentTab === 'levelHistory'" class="tab-panel">
+            <div class="level-history-section">
+              <div class="section-header">
+                <span class="section-icon">📜</span>
+                <span class="section-title">等级历史</span>
+              </div>
+              
+              <div class="level-timeline" v-if="levelHistory.length > 0">
+                <div v-for="(item, index) in levelHistory" :key="index" class="timeline-item">
+                  <div class="timeline-point" :class="{ 'latest': index === 0 }">
+                    <span class="timeline-icon">{{ getMilestoneIcon(item.level) }}</span>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-level">{{ MEMBERSHIP_LEVEL_LABELS[item.level] }}</div>
+                    <div class="timeline-date">{{ formatDate(item.date) }}</div>
+                    <div class="timeline-reason">{{ getLevelUpReason(item.reason) }}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="history-empty" v-else>
+                <div class="empty-icon">📋</div>
+                <p class="empty-text">暂无等级历史</p>
+                <p class="empty-desc">消费升级后会在这里显示</p>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else-if="currentTab === 'compare'" class="tab-panel">
+            <div class="compare-section">
+              <div class="section-header">
+                <span class="section-icon">📊</span>
+                <span class="section-title">会员等级系统</span>
+              </div>
+              
+              <div class="levels-table-wrapper">
+                <table class="levels-table">
+                  <thead>
+                    <tr>
+                      <th class="col-level">等级</th>
+                      <th class="col-icon">图标</th>
+                      <th class="col-threshold">升级门槛</th>
+                      <th class="col-discount">房价折扣</th>
+                      <th class="col-points">积分倍率</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="level in allLevels" :key="level" 
+                        :class="{ 'current-level': level === membership.level }">
+                      <td class="col-level">
+                        <span class="level-name-cell">{{ MEMBERSHIP_LEVEL_LABELS[level] }}</span>
+                        <span v-if="level === membership.level" class="current-badge">当前</span>
+                      </td>
+                      <td class="col-icon">
+                        <span class="level-icon-cell">{{ getMilestoneIcon(level) }}</span>
+                      </td>
+                      <td class="col-threshold">
+                        {{ MEMBERSHIP_LEVEL_THRESHOLDS[level] === 0 
+                          ? '注册即得' 
+                          : '¥' + MEMBERSHIP_LEVEL_THRESHOLDS[level]
+                        }}
+                      </td>
+                      <td class="col-discount">
+                        <span :class="getDiscountClass(level)">
+                          {{ getDiscountLabel(level) }}
+                        </span>
+                      </td>
+                      <td class="col-points">
+                        <span :class="getMultiplierClass(level)">
+                          {{ getMultiplierLabel(level) }}倍
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="benefits-compare-section">
+              <div class="section-header">
+                <span class="section-icon">🎁</span>
+                <span class="section-title">会员权益对比</span>
+              </div>
+              
+              <div class="benefits-compare-table-wrapper">
+                <table class="benefits-compare-table">
+                  <thead>
+                    <tr>
+                      <th class="col-benefit">权益</th>
+                      <th class="col-level-col">普通会员</th>
+                      <th class="col-level-col">银卡会员</th>
+                      <th class="col-level-col">金卡会员</th>
+                      <th class="col-level-col">钻石会员</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in benefitsCompareList" :key="item.id">
+                      <td class="col-benefit">
+                        <span class="benefit-icon-compare">{{ item.icon }}</span>
+                        <span class="benefit-name-compare">{{ item.name }}</span>
+                      </td>
+                      <td class="col-level-col">
+                        <span v-if="item.levels.includes(MEMBERSHIP_LEVELS.NORMAL)" 
+                              class="check-icon">✓</span>
+                        <span v-else class="cross-icon">—</span>
+                      </td>
+                      <td class="col-level-col" :class="{ 'has-benefit': item.levels.includes(membership.level) }">
+                        <span v-if="item.levels.includes(MEMBERSHIP_LEVELS.SILVER)" 
+                              class="check-icon">✓</span>
+                        <span v-else class="cross-icon">—</span>
+                      </td>
+                      <td class="col-level-col" :class="{ 'has-benefit': item.levels.includes(membership.level) }">
+                        <span v-if="item.levels.includes(MEMBERSHIP_LEVELS.GOLD)" 
+                              class="check-icon">✓</span>
+                        <span v-else class="cross-icon">—</span>
+                      </td>
+                      <td class="col-level-col" :class="{ 'has-benefit': item.levels.includes(membership.level) }">
+                        <span v-if="item.levels.includes(MEMBERSHIP_LEVELS.DIAMOND)" 
+                              class="check-icon">✓</span>
+                        <span v-else class="cross-icon">—</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div class="history-empty" v-else>
-        <div class="empty-icon">📋</div>
-        <p class="empty-text">暂无积分记录</p>
-        <p class="empty-desc">消费或完成任务后会在这里显示</p>
-      </div>
-    </div>
-    
-    <div class="level-history-section" v-if="levelHistory.length > 1">
-      <div class="section-header">
-        <span class="section-icon">📜</span>
-        <span class="section-title">等级历史</span>
-      </div>
-      
-      <div class="level-timeline">
-        <div v-for="(item, index) in levelHistory" :key="index" class="timeline-item">
-          <div class="timeline-point" :class="{ 'latest': index === 0 }">
-            <span class="timeline-icon">{{ getMilestoneIcon(item.level) }}</span>
-          </div>
-          <div class="timeline-content">
-            <div class="timeline-level">{{ MEMBERSHIP_LEVEL_LABELS[item.level] }}</div>
-            <div class="timeline-date">{{ formatDate(item.date) }}</div>
-            <div class="timeline-reason">{{ getLevelUpReason(item.reason) }}</div>
-          </div>
-        </div>
-      </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -162,6 +294,7 @@ import {
   MEMBERSHIP_LEVEL_ICONS,
   MEMBERSHIP_LEVEL_COLORS,
   MEMBERSHIP_LEVEL_THRESHOLDS,
+  MEMBERSHIP_LEVEL_BENEFITS,
   MEMBERSHIP_EVENT,
   seedSampleMembership
 } from '../data/membership'
@@ -170,6 +303,14 @@ import { getCurrentUser } from '../data/user'
 const user = ref(null)
 const updateCount = ref(0)
 const selectedYear = ref(null)
+const currentTab = ref('overview')
+
+const mainTabs = [
+  { value: 'overview', label: '会员中心', icon: '👑' },
+  { value: 'history', label: '积分记录', icon: '📊' },
+  { value: 'levelHistory', label: '等级历史', icon: '📜' },
+  { value: 'compare', label: '等级对比', icon: '📋' }
+]
 
 const defaultMembership = {
   level: MEMBERSHIP_LEVELS.NORMAL,
@@ -190,6 +331,59 @@ const defaultProgress = {
   nextThreshold: 1000,
   remaining: 1000
 }
+
+const benefitsCompareList = computed(() => {
+  return [
+    {
+      id: 'discount',
+      name: '房价折扣',
+      icon: '🏨',
+      levels: [MEMBERSHIP_LEVELS.SILVER, MEMBERSHIP_LEVELS.GOLD, MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'points_multiplier',
+      name: '积分倍率',
+      icon: '💰',
+      levels: [MEMBERSHIP_LEVELS.SILVER, MEMBERSHIP_LEVELS.GOLD, MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'monthly_coupon',
+      name: '月度优惠券',
+      icon: '🎫',
+      levels: [MEMBERSHIP_LEVELS.SILVER, MEMBERSHIP_LEVELS.GOLD, MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'priority_customer',
+      name: '优先客服',
+      icon: '👨‍💼',
+      levels: [MEMBERSHIP_LEVELS.SILVER, MEMBERSHIP_LEVELS.GOLD, MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'birthday_gift',
+      name: '生日特权',
+      icon: '🎂',
+      levels: [MEMBERSHIP_LEVELS.GOLD, MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'flex_cancel',
+      name: '灵活取消',
+      icon: '🔄',
+      levels: [MEMBERSHIP_LEVELS.GOLD, MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'priority_event',
+      name: '专属活动',
+      icon: '🎉',
+      levels: [MEMBERSHIP_LEVELS.DIAMOND]
+    },
+    {
+      id: 'exclusive_gift',
+      name: '专属礼品',
+      icon: '🎁',
+      levels: [MEMBERSHIP_LEVELS.DIAMOND]
+    }
+  ]
+})
 
 const handleMembershipUpdate = () => {
   updateCount.value++
@@ -293,6 +487,28 @@ const getMilestoneIcon = (level) => {
 
 const getLevelThreshold = (level) => {
   return MEMBERSHIP_LEVEL_THRESHOLDS[level] || 0
+}
+
+const getDiscountLabel = (level) => {
+  const rate = getDiscountRate(level)
+  if (rate === 1) return '无'
+  return (rate * 100) + '折'
+}
+
+const getMultiplierLabel = (level) => {
+  return getPointsMultiplier(level)
+}
+
+const getDiscountClass = (level) => {
+  const rate = getDiscountRate(level)
+  if (rate < 1) return 'has-benefit'
+  return ''
+}
+
+const getMultiplierClass = (level) => {
+  const multiplier = getPointsMultiplier(level)
+  if (multiplier > 1) return 'has-benefit'
+  return ''
 }
 
 const getHistoryIcon = (record) => {
@@ -518,10 +734,83 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.points-section {
+.tabs-wrapper {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+.main-tabs {
+  display: flex;
+  background: white;
+  border-radius: 12px;
+  padding: 0.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  gap: 0.25rem;
+}
+
+.main-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.main-tab-btn:hover {
+  background: #f5f5f5;
+}
+
+.main-tab-btn.active {
+  background: linear-gradient(135deg, #ff5a5f 0%, #ff7a7f 100%);
+  color: white;
+}
+
+.tab-icon {
+  font-size: 1rem;
+}
+
+.tab-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.tab-panel {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.points-section {
+  margin-bottom: 1.5rem;
 }
 
 .points-card {
@@ -589,10 +878,10 @@ onUnmounted(() => {
 
 .benefits-section,
 .history-section,
-.level-history-section {
-  max-width: 1200px;
-  margin: 1.5rem auto 0;
-  padding: 0 1rem;
+.level-history-section,
+.compare-section,
+.benefits-compare-section {
+  margin-bottom: 1.5rem;
 }
 
 .section-header {
@@ -877,6 +1166,106 @@ onUnmounted(() => {
   color: #999;
 }
 
+.levels-table-wrapper,
+.benefits-compare-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+.levels-table,
+.benefits-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.levels-table thead,
+.benefits-compare-table thead {
+  background: #fafafa;
+}
+
+.levels-table th,
+.levels-table td,
+.benefits-compare-table th,
+.benefits-compare-table td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.levels-table th,
+.benefits-compare-table th {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.levels-table td,
+.benefits-compare-table td {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.levels-table tr.current-level {
+  background: #fff5f5;
+}
+
+.col-level {
+  text-align: left !important;
+}
+
+.level-name-cell {
+  font-weight: 600;
+  color: #333;
+}
+
+.current-badge {
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  background: linear-gradient(135deg, #ff5a5f 0%, #ff7a7f 100%);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 10px;
+}
+
+.level-icon-cell {
+  font-size: 1.5rem;
+}
+
+.has-benefit {
+  color: #ff5a5f;
+  font-weight: 600;
+}
+
+.col-benefit {
+  text-align: left !important;
+}
+
+.benefit-icon-compare {
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.benefit-name-compare {
+  font-weight: 500;
+}
+
+.check-icon {
+  color: #52c41a;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.cross-icon {
+  color: #d9d9d9;
+}
+
+.col-level-col.has-benefit {
+  background: #fff5f5;
+}
+
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
@@ -910,6 +1299,28 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
+  }
+  
+  .main-tabs {
+    padding: 0.25rem;
+  }
+  
+  .main-tab-btn {
+    padding: 0.625rem 1rem;
+  }
+  
+  .levels-table-wrapper,
+  .benefits-compare-table-wrapper {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+  
+  .levels-table th,
+  .levels-table td,
+  .benefits-compare-table th,
+  .benefits-compare-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
   }
 }
 
