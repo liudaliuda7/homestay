@@ -10,6 +10,8 @@ import FavoritesList from '../components/FavoritesList.vue';
 import NotificationCenter from '../components/NotificationCenter.vue';
 import PointsPage from '../components/PointsPage.vue';
 import InvitePage from '../components/InvitePage.vue';
+import CouponsPage from '../components/CouponsPage.vue';
+import CouponCenter from '../components/CouponCenter.vue';
 import SecuritySettings from '../components/SecuritySettings.vue';
 import HelpCenter from '../components/HelpCenter.vue';
 import { getCurrentUser } from '../data/user';
@@ -86,6 +88,18 @@ const routes = [
         name: 'UserInvite',
         component: InvitePage,
         meta: { title: '邀请好友' }
+      },
+      {
+        path: 'coupons',
+        name: 'UserCoupons',
+        component: CouponsPage,
+        meta: { title: '我的优惠券' }
+      },
+      {
+        path: 'coupon-center',
+        name: 'UserCouponCenter',
+        component: CouponCenter,
+        meta: { title: '领券中心' }
       },
       {
         path: 'security',
