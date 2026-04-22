@@ -61,7 +61,6 @@ import Navbar from './components/Navbar.vue'
   background-color: #333;
   color: white;
   padding: 2rem 0;
-  margin-top: 3rem;
 }
 
 .container {
