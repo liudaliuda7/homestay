@@ -43,6 +43,7 @@ import { ElMessage } from 'element-plus'
 import { getCurrentUser, updateUserInfo } from '../data/user'
 import { getFavoriteCount } from '../data/favorites'
 import { getUnreadCount, NOTIFICATION_EVENT } from '../data/notifications'
+import { getCouponsCount, COUPONS_EVENT } from '../data/coupons'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,11 +57,15 @@ const userInfo = ref({
 })
 
 const notificationUpdateCount = ref(0)
+const couponUpdateCount = ref(0)
 
 const menuItems = computed(() => {
   const user = getCurrentUser()
   const unreadCount = user ? getUnreadCount(user.id) : 0
   notificationUpdateCount.value
+  couponUpdateCount.value
+  
+  const couponCounts = user ? getCouponsCount(user.id) : { available: 0, expiringSoon: 0 }
   
   return [
     { id: 'profile', name: '个人信息', icon: '👤', path: '/user/profile' },
@@ -68,6 +73,8 @@ const menuItems = computed(() => {
     { id: 'favorites', name: '我的收藏', icon: '❤️', path: '/user/favorites', badge: getFavoriteCount() },
     { id: 'notifications', name: '消息中心', icon: '🔔', path: '/user/notifications', badge: unreadCount },
     { id: 'points', name: '我的积分', icon: '💰', path: '/user/points' },
+    { id: 'coupons', name: '我的优惠券', icon: '🎫', path: '/user/coupons', badge: couponCounts.available > 0 ? couponCounts.available : null },
+    { id: 'coupon-center', name: '领券中心', icon: '🎁', path: '/user/coupon-center' },
     { id: 'invite', name: '邀请好友', icon: '👥', path: '/user/invite' },
     { id: 'security', name: '账户安全', icon: '🔐', path: '/user/security' },
     { id: 'help', name: '帮助中心', icon: '❓', path: '/user/help' }
@@ -78,6 +85,10 @@ const handleNotificationUpdate = () => {
   notificationUpdateCount.value++
 }
 
+const handleCouponUpdate = () => {
+  couponUpdateCount.value++
+}
+
 const isActiveMenu = (menuId) => {
   const pathMap = {
     'profile': '/user/profile',
@@ -85,6 +96,8 @@ const isActiveMenu = (menuId) => {
     'favorites': '/user/favorites',
     'notifications': '/user/notifications',
     'points': '/user/points',
+    'coupons': '/user/coupons',
+    'coupon-center': '/user/coupon-center',
     'invite': '/user/invite',
     'security': '/user/security',
     'help': '/user/help'
@@ -108,12 +121,14 @@ onMounted(() => {
   
   if (typeof window !== 'undefined') {
     window.addEventListener(NOTIFICATION_EVENT, handleNotificationUpdate)
+    window.addEventListener(COUPONS_EVENT, handleCouponUpdate)
   }
 })
 
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener(NOTIFICATION_EVENT, handleNotificationUpdate)
+    window.removeEventListener(COUPONS_EVENT, handleCouponUpdate)
   }
 })
 </script>
