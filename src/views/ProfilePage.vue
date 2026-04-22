@@ -9,7 +9,7 @@
             </div>
             <div class="user-info">
               <h3 class="username">{{ userInfo.username }}</h3>
-              <p class="user-status">会员用户</p>
+              <p class="user-status">{{ currentLevelLabel }}</p>
             </div>
           </div>
           
@@ -44,6 +44,7 @@ import { getCurrentUser, updateUserInfo } from '../data/user'
 import { getFavoriteCount } from '../data/favorites'
 import { getUnreadCount, NOTIFICATION_EVENT } from '../data/notifications'
 import { getCouponsCount, COUPONS_EVENT } from '../data/coupons'
+import { MEMBERSHIP_EVENT, getUserMembership, MEMBERSHIP_LEVEL_LABELS } from '../data/membership'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,18 +59,33 @@ const userInfo = ref({
 
 const notificationUpdateCount = ref(0)
 const couponUpdateCount = ref(0)
+const membershipUpdateCount = ref(0)
+
+const currentMembership = computed(() => {
+  const user = getCurrentUser()
+  if (!user) return null
+  membershipUpdateCount.value
+  return getUserMembership(user.id)
+})
+
+const currentLevelLabel = computed(() => {
+  if (!currentMembership.value) return '普通会员'
+  return MEMBERSHIP_LEVEL_LABELS[currentMembership.value.level] || '普通会员'
+})
 
 const menuItems = computed(() => {
   const user = getCurrentUser()
   const unreadCount = user ? getUnreadCount(user.id) : 0
   notificationUpdateCount.value
   couponUpdateCount.value
+  membershipUpdateCount.value
   
   const couponCounts = user ? getCouponsCount(user.id) : { available: 0, expiringSoon: 0 }
   
   return [
     { id: 'profile', name: '个人信息', icon: '👤', path: '/user/profile' },
     { id: 'order', name: '我的订单', icon: '📋', path: '/user/order', badge: 0 },
+    { id: 'membership', name: '会员中心', icon: '👑', path: '/user/membership' },
     { id: 'favorites', name: '我的收藏', icon: '❤️', path: '/user/favorites', badge: getFavoriteCount() },
     { id: 'notifications', name: '消息中心', icon: '🔔', path: '/user/notifications', badge: unreadCount },
     { id: 'points', name: '我的积分', icon: '💰', path: '/user/points' },
@@ -89,10 +105,15 @@ const handleCouponUpdate = () => {
   couponUpdateCount.value++
 }
 
+const handleMembershipUpdate = () => {
+  membershipUpdateCount.value++
+}
+
 const isActiveMenu = (menuId) => {
   const pathMap = {
     'profile': '/user/profile',
     'order': '/user/order',
+    'membership': '/user/membership',
     'favorites': '/user/favorites',
     'notifications': '/user/notifications',
     'points': '/user/points',
@@ -122,6 +143,7 @@ onMounted(() => {
   if (typeof window !== 'undefined') {
     window.addEventListener(NOTIFICATION_EVENT, handleNotificationUpdate)
     window.addEventListener(COUPONS_EVENT, handleCouponUpdate)
+    window.addEventListener(MEMBERSHIP_EVENT, handleMembershipUpdate)
   }
 })
 
@@ -129,6 +151,7 @@ onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener(NOTIFICATION_EVENT, handleNotificationUpdate)
     window.removeEventListener(COUPONS_EVENT, handleCouponUpdate)
+    window.removeEventListener(MEMBERSHIP_EVENT, handleMembershipUpdate)
   }
 })
 </script>
