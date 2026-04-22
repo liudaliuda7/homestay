@@ -171,6 +171,26 @@ const user = ref(null)
 const updateCount = ref(0)
 const selectedYear = ref(null)
 
+const defaultMembership = {
+  level: MEMBERSHIP_LEVELS.NORMAL,
+  totalSpent: 0,
+  joinDate: new Date().toISOString(),
+  lastUpgradeDate: new Date().toISOString(),
+  monthlyCouponIssued: {},
+  pointsHistory: [],
+  levelHistory: []
+}
+
+const defaultProgress = {
+  currentLevel: MEMBERSHIP_LEVELS.NORMAL,
+  currentSpent: 0,
+  isMaxLevel: false,
+  progress: 0,
+  nextLevel: MEMBERSHIP_LEVELS.SILVER,
+  nextThreshold: 1000,
+  remaining: 1000
+}
+
 const handleMembershipUpdate = () => {
   updateCount.value++
 }
@@ -184,13 +204,13 @@ const allLevels = [
 
 const membership = computed(() => {
   updateCount.value
-  if (!user.value) return null
+  if (!user.value) return { ...defaultMembership }
   return getUserMembership(user.value.id)
 })
 
 const progress = computed(() => {
   updateCount.value
-  if (!user.value) return null
+  if (!user.value) return { ...defaultProgress }
   return getLevelProgress(user.value.id)
 })
 
