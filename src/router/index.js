@@ -12,6 +12,7 @@ import PointsPage from '../components/PointsPage.vue';
 import InvitePage from '../components/InvitePage.vue';
 import CouponsPage from '../components/CouponsPage.vue';
 import CouponCenter from '../components/CouponCenter.vue';
+import MembershipPage from '../components/MembershipPage.vue';
 import SecuritySettings from '../components/SecuritySettings.vue';
 import HelpCenter from '../components/HelpCenter.vue';
 import { getCurrentUser } from '../data/user';
@@ -100,6 +101,12 @@ const routes = [
         name: 'UserCouponCenter',
         component: CouponCenter,
         meta: { title: '领券中心' }
+      },
+      {
+        path: 'membership',
+        name: 'UserMembership',
+        component: MembershipPage,
+        meta: { title: '会员中心' }
       },
       {
         path: 'security',
